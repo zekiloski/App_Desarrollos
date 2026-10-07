@@ -3,7 +3,7 @@ import { db } from "./db";
 import { puede } from "./permisos";
 import type { UsuarioSesion } from "./auth";
 
-// El vendedor solo ve las solicitudes que trajo o que cargó él.
+// Quien no ve todas (el vendedor) ve solo las suyas: las que trajo o las que cargó.
 export function filtroVisibilidad(u: UsuarioSesion): Prisma.SolicitudWhereInput {
   if (puede(u.rol, "solicitud.verTodas")) return {};
   return { OR: [{ vendedorId: u.id }, { creadaPorId: u.id }] };

@@ -17,7 +17,7 @@ export default async function PaginaQr({ params }: { params: Promise<{ token: st
     <div className="tarjeta mx-auto max-w-md text-center">
       <h1 className="text-xl font-bold">Pieza {s.numero}</h1>
       <p className="mt-2 text-slate-600">
-        Esta pieza pertenece a una solicitud de otro vendedor, por eso no podés ver su ficha. Si la encontraste
+        Esta pieza pertenece a una solicitud que no es tuya, por eso no podés ver su ficha. Si la encontraste
         fuera de lugar, avisá en Recepción u Oficina Técnica indicando ese número.
       </p>
       <Link href="/solicitudes" className="btn btn-primario mt-4">

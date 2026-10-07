@@ -16,6 +16,8 @@ export type Accion =
 
 const PERMISOS: Record<Accion, Rol[]> = {
   "solicitud.crear": ["VENDEDOR", "RECEPCION", "OFICINA_TECNICA", "ADMIN"],
+  // Solo el vendedor queda limitado a las suyas: Recepción recibe piezas de cualquier solicitud
+  // y Producción participa del análisis y la aprobación.
   "solicitud.verTodas": ["RECEPCION", "OFICINA_TECNICA", "PRODUCCION", "ADMIN"],
   "ubicacion.editar": ["RECEPCION", "OFICINA_TECNICA", "PRODUCCION", "ADMIN"],
   "tecnico.editar": ["OFICINA_TECNICA", "PRODUCCION", "ADMIN"],
