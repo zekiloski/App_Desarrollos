@@ -48,6 +48,12 @@ enum RequiereMatriz {
   NO
 }
 
+enum EtiquetaQr {
+  PENDIENTE
+  IMPRESA
+  NO_REQUIERE
+}
+
 enum TipoAdjunto {
   PLANO
   IMAGEN
@@ -141,6 +147,8 @@ model Solicitud {
   estante     String?  @db.VarChar(100)
   tenidaPorId Int?
   tenidaPor   Usuario? @relation("SolicitudTenidaPor", fields: [tenidaPorId], references: [id])
+  // Se pregunta al recibir la pieza; si queda pendiente, se vuelve a preguntar antes de pasar a análisis.
+  etiquetaQr  EtiquetaQr @default(PENDIENTE)
 
   material    String? @db.VarChar(150)
   espesor     String? @db.VarChar(60)

@@ -166,9 +166,10 @@ export function AccionesEstado({
         <DialogoCambioEstado
           cambio={cambio}
           onCerrar={() => setCambio(null)}
-          onHecho={() => {
+          onHecho={(abrirEtiqueta) => {
             setCambio(null);
-            router.refresh();
+            if (abrirEtiqueta) router.push(`/solicitudes/${solicitud.id}/etiqueta`);
+            else router.refresh();
           }}
         />
       )}

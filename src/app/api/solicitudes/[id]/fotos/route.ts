@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { usuarioActual } from "@/lib/auth";
+import { puede } from "@/lib/permisos";
 import { puedeVerSolicitud } from "@/lib/solicitudes";
 import { TAMANO_MAX_FOTO, guardarFoto } from "@/lib/archivos";
 
@@ -10,6 +11,9 @@ const MAX_FOTOS_POR_SOLICITUD = 40;
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const u = await usuarioActual();
   if (!u) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  if (!puede(u.rol, "fotos.agregar")) {
+    return NextResponse.json({ error: "Tu rol no puede agregar fotos." }, { status: 403 });
+  }
 
   const solicitudId = Number((await params).id);
   if (!Number.isInteger(solicitudId) || !(await puedeVerSolicitud(u, solicitudId))) {

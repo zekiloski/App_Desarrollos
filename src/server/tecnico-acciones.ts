@@ -45,8 +45,22 @@ export async function guardarDatosTecnicos(
   _prev: EstadoTecnico,
   fd: FormData,
 ): Promise<EstadoTecnico> {
-  const { s, error } = await solicitudEditable(solicitudId, "tecnico.editar");
+  // Con "tecnico.editar" se guarda todo; con solo "material.editar", únicamente material, espesor y
+  // dimensiones: lo que venga de matriz se ignora aunque lo manden a mano.
+  const completo = puede((await requerirUsuario()).rol, "tecnico.editar");
+  const { s, error } = await solicitudEditable(solicitudId, completo ? "tecnico.editar" : "material.editar");
   if (!s) return { error };
+
+  const basicos = {
+    material: limpio(fd.get("material"), 150),
+    espesor: limpio(fd.get("espesor"), 60),
+    dimensiones: limpio(fd.get("dimensiones"), 250),
+  };
+  if (!completo) {
+    await db.solicitud.update({ where: { id: s.id }, data: basicos });
+    revalidatePath(`/solicitudes/${s.id}`);
+    return { guardado: Date.now() };
+  }
 
   const matriz = String(fd.get("requiereMatriz") ?? "");
   if (matriz !== "SIN_EVALUAR" && matriz !== "SI" && matriz !== "NO") return { error: "Indicá si requiere matriz." };
@@ -64,9 +78,7 @@ export async function guardarDatosTecnicos(
   await db.solicitud.update({
     where: { id: s.id },
     data: {
-      material: limpio(fd.get("material"), 150),
-      espesor: limpio(fd.get("espesor"), 60),
-      dimensiones: limpio(fd.get("dimensiones"), 250),
+      ...basicos,
       requiereMatriz: matriz,
       matrizObservaciones: limpio(fd.get("matrizObservaciones"), 2000),
       // Costo y tiempo solo tienen sentido si hace falta la matriz.

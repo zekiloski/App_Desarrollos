@@ -27,6 +27,9 @@ const esquemaSolicitud = z.object({
   cantidadEstimada: z.coerce.number().int("Tiene que ser un número entero").positive("Tiene que ser mayor a 0").max(10_000_000).optional(),
   urgencia: z.enum(["BAJA", "NORMAL", "ALTA", "URGENTE"]),
   implemento: opcional(200),
+  material: opcional(150),
+  espesor: opcional(60),
+  dimensiones: opcional(250),
 });
 
 // Los campos vacíos del formulario llegan como "": se tratan como no informados.
@@ -62,6 +65,7 @@ export async function crearSolicitud(fd: FormData): Promise<ResultadoCrear> {
     vendedorId = v.id;
   }
 
+  const conMaterial = puede(u.rol, "material.editar") || puede(u.rol, "tecnico.editar");
   const ahora = new Date();
   const anio = ahora.getFullYear();
 
@@ -103,6 +107,7 @@ export async function crearSolicitud(fd: FormData): Promise<ResultadoCrear> {
           cantidadEstimada: d.cantidadEstimada,
           urgencia: d.urgencia,
           implemento: d.implemento,
+          ...(conMaterial ? { material: d.material, espesor: d.espesor, dimensiones: d.dimensiones } : {}),
           estado: "INGRESADA",
           fechaUltimoMovimiento: ahora,
           movimientosEstado: { create: { estadoNuevo: "INGRESADA", usuarioId: u.id, fecha: ahora } },

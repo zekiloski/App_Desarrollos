@@ -16,8 +16,10 @@ export function FormNuevaSolicitud({
   clientes,
   vendedores,
   esVendedor,
+  conMaterial,
   yo,
 }: {
+  conMaterial: boolean;
   clientes: ClienteOpcion[];
   vendedores: { id: number; nombre: string }[];
   esVendedor: boolean;
@@ -277,6 +279,41 @@ export function FormNuevaSolicitud({
           </div>
         </div>
       </section>
+
+      {conMaterial && (
+        <section className="tarjeta space-y-4">
+          <div>
+            <h2 className="titulo-seccion mb-1!">Material y medidas</h2>
+            <p className="text-sm text-slate-500">Opcional: completá lo que sepas. Se puede cargar o corregir después.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="material" className="etiqueta">
+                Material
+              </label>
+              <input id="material" name="material" className="campo" maxLength={150} placeholder="Ej: chapa SAE 1010" />
+            </div>
+            <div>
+              <label htmlFor="espesor" className="etiqueta">
+                Espesor
+              </label>
+              <input id="espesor" name="espesor" className="campo" maxLength={60} placeholder="Ej: 3,2 mm" />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="dimensiones" className="etiqueta">
+              Dimensiones principales
+            </label>
+            <input
+              id="dimensiones"
+              name="dimensiones"
+              className="campo"
+              maxLength={250}
+              placeholder="Ej: 320 × 150 × 45 mm"
+            />
+          </div>
+        </section>
+      )}
 
       <section className="tarjeta space-y-3">
         <h2 className="titulo-seccion">

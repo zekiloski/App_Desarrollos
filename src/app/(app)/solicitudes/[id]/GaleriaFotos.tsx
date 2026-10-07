@@ -7,7 +7,15 @@ import { BotonesFoto } from "@/components/BotonesFoto";
 
 type FotoVista = { id: number; url: string; urlMiniatura: string };
 
-export function GaleriaFotos({ solicitudId, fotos }: { solicitudId: number; fotos: FotoVista[] }) {
+export function GaleriaFotos({
+  solicitudId,
+  fotos,
+  puedeAgregar,
+}: {
+  solicitudId: number;
+  fotos: FotoVista[];
+  puedeAgregar: boolean;
+}) {
   const router = useRouter();
   const [abierta, setAbierta] = useState<number | null>(null);
   const [progreso, setProgreso] = useState("");
@@ -72,7 +80,7 @@ export function GaleriaFotos({ solicitudId, fotos }: { solicitudId: number; foto
         </ul>
       )}
 
-      <BotonesFoto onArchivos={subir} deshabilitado={progreso !== ""} />
+      {puedeAgregar && <BotonesFoto onArchivos={subir} deshabilitado={progreso !== ""} />}
       {progreso && <p className="text-sm font-medium text-slate-600">{progreso}</p>}
       {error && (
         <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">

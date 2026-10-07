@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import QRCode from "qrcode";
 import { db } from "@/lib/db";
 import { requerirUsuario } from "@/lib/auth";
+import { puede } from "@/lib/permisos";
 import { filtroVisibilidad } from "@/lib/solicitudes";
 import { fecha } from "@/lib/formato";
 import { urlBase } from "@/lib/url";
@@ -22,6 +23,7 @@ export default async function PaginaEtiqueta({ params }: { params: Promise<{ id:
       id: true,
       numero: true,
       tokenQr: true,
+      etiquetaQr: true,
       descripcion: true,
       fechaIngreso: true,
       cliente: { select: { nombre: true } },
@@ -29,6 +31,11 @@ export default async function PaginaEtiqueta({ params }: { params: Promise<{ id:
     },
   });
   if (!s) notFound();
+
+  // Abrir esta pantalla es "generar la etiqueta": queda registrado para no volver a preguntarlo.
+  if (s.etiquetaQr !== "IMPRESA" && puede(u.rol, "ubicacion.editar")) {
+    await db.solicitud.update({ where: { id: s.id }, data: { etiquetaQr: "IMPRESA" } });
+  }
 
   const url = `${await urlBase()}/q/${s.tokenQr}`;
   const qr = await QRCode.toString(url, { type: "svg", margin: 0, errorCorrectionLevel: "M" });

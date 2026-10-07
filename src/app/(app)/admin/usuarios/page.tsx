@@ -19,6 +19,7 @@ export default async function PaginaUsuarios() {
         </Link>
       </div>
       <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-blue-700">
+        <Link href="/admin/permisos">Permisos por rol →</Link>
         <Link href="/admin/procesos">Lista de procesos →</Link>
         <Link href="/admin/avisos">Avisos por email →</Link>
       </div>

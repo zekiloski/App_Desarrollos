@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { requerirPermiso } from "@/lib/auth";
+import { puede } from "@/lib/permisos";
 import { FormNuevaSolicitud } from "./FormNuevaSolicitud";
 
 export const metadata: Metadata = { title: "Nueva solicitud" };
@@ -29,6 +30,7 @@ export default async function PaginaNuevaSolicitud() {
         clientes={clientes}
         vendedores={vendedores}
         esVendedor={u.rol === "VENDEDOR"}
+        conMaterial={puede(u.rol, "material.editar") || puede(u.rol, "tecnico.editar")}
         yo={{ id: u.id, nombre: u.nombre }}
       />
     </div>

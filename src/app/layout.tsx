@@ -27,7 +27,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
       </head>
-      <body>{children}</body>
+      {/* Algunas extensiones del navegador agregan atributos al body antes de que React cargue. */}
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

@@ -1,4 +1,4 @@
-import type { Estado, RequiereMatriz, Rol, TipoIngreso } from "@prisma/client";
+import type { Estado, EtiquetaQr, RequiereMatriz, Rol, TipoIngreso } from "@prisma/client";
 import { puede, type Accion } from "./permisos";
 
 // Reglas del flujo. No depende del servidor: lo usan las acciones, la ficha y el tablero.
@@ -10,9 +10,15 @@ export type SolicitudFlujo = {
   aprobada: boolean | null;
   codigoPieza: string | null;
   requiereMatriz: RequiereMatriz;
+  etiquetaQr: EtiquetaQr;
 };
 
-export type Requisito = "motivo" | "ubicacion" | "codigo";
+// "etiqueta": hay que decidir si se genera la etiqueta con QR. Al recibir la pieza se puede dejar para
+// después; antes de pasar a análisis ya hay que resolverlo (generarla o indicar que no hace falta).
+export type Requisito = "motivo" | "ubicacion" | "codigo" | "etiqueta";
+
+// Respuesta a "¿generar la etiqueta QR?".
+export type DecisionEtiqueta = "SI" | "NO" | "DESPUES";
 
 export type Evaluacion =
   | { ok: true; tipo: "avance" | "retroceso"; requisitos: Requisito[] }
@@ -106,7 +112,10 @@ export function evaluarCambio(s: SolicitudFlujo, rol: Rol, destino: Estado): Eva
       };
     }
     const requisitos: Requisito[] = [];
-    if (destino === "RECIBIDA_EN_PLANTA") requisitos.push("ubicacion");
+    if (destino === "RECIBIDA_EN_PLANTA") requisitos.push("ubicacion", "etiqueta");
+    if (destino === "EN_ANALISIS" && s.estado === "RECIBIDA_EN_PLANTA" && s.etiquetaQr === "PENDIENTE") {
+      requisitos.push("etiqueta");
+    }
     if (destino === "RECHAZADA") requisitos.push("motivo");
     if (destino === "CODIGO_CREADO" && !s.codigoPieza) requisitos.push("codigo");
     return { ok: true, tipo: "avance", requisitos };
@@ -120,6 +129,18 @@ export function evaluarCambio(s: SolicitudFlujo, rol: Rol, destino: Estado): Eva
   }
 
   return { ok: false, error: "No se puede pasar directo a esa etapa: hay que seguir el orden del flujo." };
+}
+
+// Etapas que recorre una solicitud de principio a fin, para dibujar su avance.
+// Solo fotos no pasa por la recepción; una rechazada termina en "Rechazada" y de ahí se cierra.
+export function recorrido(s: Pick<SolicitudFlujo, "tipoIngreso" | "aprobada" | "estado">): Estado[] {
+  const rechazada = s.aprobada === false || s.estado === "RECHAZADA";
+  return ORDEN.filter((e) => {
+    if (e === "RECIBIDA_EN_PLANTA") return s.tipoIngreso !== "FOTOS" || s.estado === e;
+    if (e === "RECHAZADA") return rechazada;
+    if (e === "APROBADA" || e === "CODIGO_CREADO" || e === "CARGADA_EN_PRODUCCION") return !rechazada;
+    return true;
+  });
 }
 
 export function puedePonerEnEspera(s: SolicitudFlujo, rol: Rol) {

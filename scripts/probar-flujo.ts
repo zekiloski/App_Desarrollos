@@ -16,6 +16,7 @@ const sol = (estado: Estado, tipoIngreso: TipoIngreso = "AMBAS", extra: Partial<
   aprobada: null,
   codigoPieza: null,
   requiereMatriz: "NO",
+  etiquetaQr: "PENDIENTE",
   ...extra,
 });
 const resultado = (s: SolicitudFlujo, rol: Rol, d: Estado) => {
@@ -28,7 +29,11 @@ esperar("pieza física debe recibirse primero", avancesPosibles(sol("INGRESADA",
 esperar("ambas: recibir o analizar", avancesPosibles(sol("INGRESADA"), "ADMIN"), ["RECIBIDA_EN_PLANTA", "EN_ANALISIS"]);
 esperar("recepción solo puede recibir", avancesPosibles(sol("INGRESADA"), "RECEPCION"), ["RECIBIDA_EN_PLANTA"]);
 esperar("vendedor no mueve nada", avancesPosibles(sol("INGRESADA"), "VENDEDOR"), []);
-esperar("recibir pide ubicación", resultado(sol("INGRESADA"), "RECEPCION", "RECIBIDA_EN_PLANTA"), "avance:ubicacion");
+esperar("recibir pide ubicación y etiqueta", resultado(sol("INGRESADA"), "RECEPCION", "RECIBIDA_EN_PLANTA"), "avance:ubicacion,etiqueta");
+esperar("a análisis con etiqueta pendiente: la pide", resultado(sol("RECIBIDA_EN_PLANTA"), "ADMIN", "EN_ANALISIS"), "avance:etiqueta");
+esperar("a análisis con etiqueta generada: no la pide", resultado(sol("RECIBIDA_EN_PLANTA", "AMBAS", { etiquetaQr: "IMPRESA" }), "ADMIN", "EN_ANALISIS"), "avance:");
+esperar("a análisis con 'no hace falta': no la pide", resultado(sol("RECIBIDA_EN_PLANTA", "AMBAS", { etiquetaQr: "NO_REQUIERE" }), "ADMIN", "EN_ANALISIS"), "avance:");
+esperar("solo fotos a análisis: no pide etiqueta", resultado(sol("INGRESADA", "FOTOS"), "ADMIN", "EN_ANALISIS"), "avance:");
 esperar("producción aprueba", resultado(sol("EVALUACION_MATRIZ"), "PRODUCCION", "APROBADA"), "avance:");
 esperar(
   "no se aprueba sin evaluar la matriz",

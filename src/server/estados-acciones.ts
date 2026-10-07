@@ -8,7 +8,7 @@ import { puede } from "@/lib/permisos";
 import { filtroVisibilidad } from "@/lib/solicitudes";
 import { ESTADOS, nombreEstado } from "@/lib/etiquetas";
 import { avisarCambio } from "@/lib/notificaciones/avisos";
-import { evaluarCambio, indiceEstado, puedePonerEnEspera } from "@/lib/estados";
+import { evaluarCambio, indiceEstado, puedePonerEnEspera, type DecisionEtiqueta } from "@/lib/estados";
 
 export type ResultadoAccion = { ok: true } | { ok: false; error: string };
 
@@ -38,6 +38,7 @@ async function buscar(solicitudId: number) {
       aprobada: true,
       codigoPieza: true,
       requiereMatriz: true,
+      etiquetaQr: true,
     },
   });
   return { u, s };
@@ -45,7 +46,14 @@ async function buscar(solicitudId: number) {
 
 export async function cambiarEstado(
   solicitudId: number,
-  datos: { destino: string; motivo?: string; sector?: string; estante?: string; codigoPieza?: string },
+  datos: {
+    destino: string;
+    motivo?: string;
+    sector?: string;
+    estante?: string;
+    codigoPieza?: string;
+    etiqueta?: DecisionEtiqueta;
+  },
 ): Promise<ResultadoAccion> {
   const { u, s } = await buscar(solicitudId);
   if (!s) return { ok: false, error: "Solicitud no encontrada." };
@@ -74,8 +82,20 @@ export async function cambiarEstado(
     if (repetido) return { ok: false, error: `Ese código ya está usado en la solicitud ${repetido.numero}.` };
   }
 
+  if (ev.requisitos.includes("etiqueta")) {
+    const validas: DecisionEtiqueta[] = destino === "RECIBIDA_EN_PLANTA" ? ["SI", "NO", "DESPUES"] : ["SI", "NO"];
+    if (!datos.etiqueta || !validas.includes(datos.etiqueta)) {
+      return { ok: false, error: "Indicá si se genera la etiqueta con QR." };
+    }
+  }
+
   const ahora = new Date();
   const data: Prisma.SolicitudUncheckedUpdateManyInput = { estado: destino, fechaUltimoMovimiento: ahora };
+
+  if (ev.requisitos.includes("etiqueta")) {
+    if (datos.etiqueta === "SI") data.etiquetaQr = "IMPRESA";
+    if (datos.etiqueta === "NO") data.etiquetaQr = "NO_REQUIERE";
+  }
 
   if (ev.tipo === "avance") {
     if (destino === "RECIBIDA_EN_PLANTA") Object.assign(data, { sector, estante });

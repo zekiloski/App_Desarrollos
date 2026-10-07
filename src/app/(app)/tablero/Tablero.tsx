@@ -24,6 +24,7 @@ export type Tarjeta = SolicitudFlujo & {
   id: number;
   numero: string;
   cliente: string;
+  cargadaPor: string;
   descripcion: string;
   urgencia: Urgencia;
   sector: string | null;
@@ -56,6 +57,7 @@ function CuerpoTarjeta({ t }: { t: Tarjeta }) {
         </div>
       </div>
       <p className="mt-1 line-clamp-2 text-sm text-slate-600">{t.descripcion}</p>
+      <p className="mt-1 truncate text-xs text-slate-500">Cargó: {t.cargadaPor}</p>
       <div className="mt-2 flex flex-wrap items-center gap-1">
         {t.enEspera && <span className="chip bg-amber-100 text-amber-800">En espera</span>}
         {(t.urgencia === "ALTA" || t.urgencia === "URGENTE") && (
@@ -241,9 +243,11 @@ export function Tablero({ tarjetas: iniciales, rol }: { tarjetas: Tarjeta[]; rol
         <DialogoCambioEstado
           cambio={cambio}
           onCerrar={() => setCambio(null)}
-          onHecho={() => {
+          onHecho={(abrirEtiqueta) => {
+            const id = cambio.solicitudId;
             setCambio(null);
-            router.refresh();
+            if (abrirEtiqueta) router.push(`/solicitudes/${id}/etiqueta`);
+            else router.refresh();
           }}
         />
       )}

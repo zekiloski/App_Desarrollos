@@ -15,6 +15,7 @@ import {
 } from "@/lib/filtros";
 import { COLOR_URGENCIA, ESTADOS, URGENCIAS, colorEstado, nombreEstado } from "@/lib/etiquetas";
 import { diasDesde, fecha, hace } from "@/lib/formato";
+import { Progreso } from "@/components/Progreso";
 
 export const metadata: Metadata = { title: "Solicitudes" };
 
@@ -194,8 +195,9 @@ export default async function PaginaSolicitudes({
               <li key={s.id}>
                 <Link
                   href={`/solicitudes/${s.id}`}
-                  className="tarjeta flex gap-3 transition hover:border-blue-300 hover:shadow"
+                  className="tarjeta block space-y-3 transition hover:border-blue-300 hover:shadow"
                 >
+                 <div className="flex gap-3">
                   <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
                     {s.fotos[0] ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -229,6 +231,8 @@ export default async function PaginaSolicitudes({
                       {s.vendedor.nombre} · {fecha(s.fechaIngreso)} ({hace(s.fechaIngreso)})
                     </div>
                   </div>
+                 </div>
+                 <Progreso estado={s.estado} tipoIngreso={s.tipoIngreso} enEspera={s.enEspera} aprobada={s.aprobada} />
                 </Link>
               </li>
             );

@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requerirUsuario } from "@/lib/auth";
-import { puede } from "@/lib/permisos";
+import { PERMISOS_POR_DEFECTO, ROLES_CONFIGURABLES, puede, type Accion } from "@/lib/permisos";
+import { PREFIJO_PERMISO, esAccionConfigurable } from "@/lib/permisos-db";
 import { CLAVE_DIAS_ALERTA } from "@/lib/config";
 import { enviarPendientes } from "@/lib/notificaciones";
 
@@ -27,7 +28,34 @@ export async function guardarDiasAlerta(_prev: EstadoConfig, fd: FormData): Prom
   return { guardado: Date.now() };
 }
 
-export type EstadoEnvio = { mensaje?: string; error?: string };
+export type EstadoPermisos = { error?: string; mensaje?: string };
+
+// Guarda la matriz completa de permisos, o la devuelve a los valores de fábrica si viene "restablecer".
+export async function guardarPermisos(_prev: EstadoPermisos, fd: FormData): Promise<EstadoPermisos> {
+  const u = await requerirUsuario();
+  if (!puede(u.rol, "admin")) return { error: "Solo Gerencia / Admin puede cambiar los permisos." };
+
+  if (fd.get("restablecer") === "1") {
+    await db.configuracion.deleteMany({ where: { clave: { startsWith: PREFIJO_PERMISO } } });
+    revalidatePath("/", "layout");
+    return { mensaje: "Se restablecieron los permisos originales." };
+  }
+
+  const acciones = (Object.keys(PERMISOS_POR_DEFECTO) as Accion[]).filter(esAccionConfigurable);
+  await db.$transaction(
+    acciones.map((accion) => {
+      // Cada casilla marcada llega como "accion|ROL".
+      const valor = ROLES_CONFIGURABLES.filter((rol) => fd.get(`${accion}|${rol}`) === "on").join(",");
+      const clave = PREFIJO_PERMISO + accion;
+      return db.configuracion.upsert({ where: { clave }, update: { valor }, create: { clave, valor } });
+    }),
+  );
+
+  revalidatePath("/", "layout");
+  return { mensaje: "Permisos guardados. Rigen desde ahora para todos los usuarios." };
+}
+
+export type EstadoEnvio ={ mensaje?: string; error?: string };
 
 // Reintenta los avisos con error y envía todo lo pendiente.
 export async function enviarAvisosPendientes(_prev: EstadoEnvio, _fd: FormData): Promise<EstadoEnvio> {

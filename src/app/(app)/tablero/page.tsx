@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
-import { requerirUsuario } from "@/lib/auth";
+import { requerirPermiso } from "@/lib/auth";
 import { filtroVisibilidad } from "@/lib/solicitudes";
 import { Tablero, type Tarjeta } from "./Tablero";
 
@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Tablero" };
 const DIAS_CERRADAS = 30;
 
 export default async function PaginaTablero() {
-  const u = await requerirUsuario();
+  const u = await requerirPermiso("tablero.ver");
   const desde = new Date(Date.now() - DIAS_CERRADAS * 86_400_000);
 
   const solicitudes = await db.solicitud.findMany({
@@ -32,10 +32,12 @@ export default async function PaginaTablero() {
       aprobada: true,
       codigoPieza: true,
       requiereMatriz: true,
+      etiquetaQr: true,
       sector: true,
       estante: true,
       fechaUltimoMovimiento: true,
       cliente: { select: { nombre: true } },
+      creadaPor: { select: { nombre: true } },
       fotos: { select: { rutaMiniatura: true }, orderBy: { id: "asc" }, take: 1 },
     },
   });
@@ -45,6 +47,7 @@ export default async function PaginaTablero() {
     id: s.id,
     numero: s.numero,
     cliente: s.cliente.nombre,
+    cargadaPor: s.creadaPor.nombre,
     descripcion: s.descripcion,
     urgencia: s.urgencia,
     estado: s.estado,
@@ -53,6 +56,7 @@ export default async function PaginaTablero() {
     aprobada: s.aprobada,
     codigoPieza: s.codigoPieza,
     requiereMatriz: s.requiereMatriz,
+    etiquetaQr: s.etiquetaQr,
     sector: s.sector,
     estante: s.estante,
     dias: Math.floor((ahora - s.fechaUltimoMovimiento.getTime()) / 86_400_000),

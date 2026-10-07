@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import type { Estado } from "@prisma/client";
 import { ACCION_ESTADO, nombreEstado } from "@/lib/etiquetas";
-import type { Requisito } from "@/lib/estados";
+import type { DecisionEtiqueta, Requisito } from "@/lib/estados";
 import { cambiarEstado } from "@/server/estados-acciones";
 
 export type CambioPendiente = {
@@ -24,8 +24,12 @@ export function DialogoCambioEstado({
 }: {
   cambio: CambioPendiente;
   onCerrar: () => void;
-  onHecho: () => void;
+  // abrirEtiqueta: se eligió generar la etiqueta QR; quien usa el diálogo debe llevar a esa pantalla.
+  onHecho: (abrirEtiqueta: boolean) => void;
 }) {
+  // Al recibir la pieza se puede dejar la etiqueta para después; antes de análisis hay que decidir.
+  const puedePostergar = cambio.destino === "RECIBIDA_EN_PLANTA";
+  const [etiqueta, setEtiqueta] = useState<DecisionEtiqueta | "">("");
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
   const pide = (r: Requisito) => cambio.requisitos.includes(r);
@@ -36,6 +40,7 @@ export function DialogoCambioEstado({
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const txt = (k: string) => String(fd.get(k) ?? "");
+    if (pide("etiqueta") && !etiqueta) return setError("Indicá si se genera la etiqueta con QR.");
     setEnviando(true);
     setError("");
     const r = await cambiarEstado(cambio.solicitudId, {
@@ -44,11 +49,12 @@ export function DialogoCambioEstado({
       sector: txt("sector"),
       estante: txt("estante"),
       codigoPieza: txt("codigoPieza"),
+      etiqueta: etiqueta || undefined,
     }).catch(() => null);
     setEnviando(false);
     if (!r) return setError("No se pudo conectar con el servidor. Probá de nuevo.");
     if (!r.ok) return setError(r.error);
-    onHecho();
+    onHecho(pide("etiqueta") && etiqueta === "SI");
   }
 
   return (
@@ -102,6 +108,46 @@ export function DialogoCambioEstado({
               />
             </div>
           </>
+        )}
+
+        {pide("etiqueta") && (
+          <div>
+            <span className="etiqueta">¿Generar la etiqueta con QR para pegar en la pieza? *</span>
+            {!puedePostergar && (
+              <p className="mb-2 text-sm text-slate-500">
+                Esta pieza todavía no tiene etiqueta. Antes de pasarla a análisis hay que resolverlo.
+              </p>
+            )}
+            <div className={`grid gap-2 ${puedePostergar ? "grid-cols-3" : "grid-cols-2"}`} role="radiogroup" aria-label="Etiqueta con QR">
+              {(
+                [
+                  ["SI", "Sí, ahora"],
+                  ...(puedePostergar ? [["DESPUES", "Más tarde"]] : []),
+                  ["NO", "No hace falta"],
+                ] as [DecisionEtiqueta, string][]
+              ).map(([valor, texto]) => (
+                <button
+                  key={valor}
+                  type="button"
+                  role="radio"
+                  aria-checked={etiqueta === valor}
+                  onClick={() => setEtiqueta(valor)}
+                  className={`min-h-12 cursor-pointer rounded-xl border-2 px-2 text-sm font-semibold ${
+                    etiqueta === valor
+                      ? "border-blue-700 bg-blue-50 text-blue-800"
+                      : "border-slate-300 bg-superficie text-slate-700"
+                  }`}
+                >
+                  {texto}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-sm text-slate-500">
+              {etiqueta === "SI" && "Al confirmar se abre la etiqueta lista para imprimir."}
+              {etiqueta === "DESPUES" && "Se va a volver a preguntar antes de pasar la pieza a análisis técnico."}
+              {etiqueta === "NO" && "La pieza queda sin etiqueta. Se puede generar igual más adelante desde la ficha."}
+            </p>
+          </div>
         )}
 
         {pide("codigo") && (

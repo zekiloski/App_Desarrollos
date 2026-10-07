@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requerirPermiso } from "@/lib/auth";
+import { puede } from "@/lib/permisos";
 import { diasAlerta } from "@/lib/config";
 import { condicionDetenidas } from "@/lib/filtros";
 import { calcularMetricas, type Conteo } from "@/lib/metricas";
@@ -66,7 +67,7 @@ const baseTexto = (n: number, que: string) =>
   n === 0 ? "Todavía sin datos" : `Promedio de ${n} ${n === 1 ? "solicitud" : "solicitudes"} ${que}`;
 
 export default async function PaginaMetricas({ searchParams }: { searchParams: Promise<{ periodo?: string }> }) {
-  await requerirPermiso("admin");
+  const u = await requerirPermiso("metricas.ver");
   const clave = (await searchParams).periodo ?? "todo";
   const periodo = PERIODOS[clave] ?? PERIODOS.todo;
   const desde = periodo.dias ? new Date(Date.now() - periodo.dias * 86_400_000) : null;
@@ -215,7 +216,7 @@ export default async function PaginaMetricas({ searchParams }: { searchParams: P
             Solicitudes abiertas sin cambios de etapa hace más de {dias} días. No depende del período elegido.
           </p>
         </div>
-        <FormDiasAlerta dias={dias} />
+        {puede(u.rol, "admin") && <FormDiasAlerta dias={dias} />}
         {detenidas.length === 0 ? (
           <p className="text-sm text-slate-500">No hay ninguna. Todo se está moviendo.</p>
         ) : (

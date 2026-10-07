@@ -33,11 +33,12 @@ function Dato({ nombre, valor }: { nombre: string; valor: string | null }) {
 export function DatosTecnicos({
   solicitudId,
   datos,
-  puedeEditar,
+  alcance,
 }: {
   solicitudId: number;
   datos: DatosTecnicosVista;
-  puedeEditar: boolean;
+  // "basico": solo material, espesor y dimensiones. "todo": además la matriz. null: solo lectura.
+  alcance: "todo" | "basico" | null;
 }) {
   const [editando, setEditando] = useState(false);
   const [matriz, setMatriz] = useState<RequiereMatriz>(datos.requiereMatriz);
@@ -84,7 +85,7 @@ export function DatosTecnicos({
             </div>
           )}
         </dl>
-        {puedeEditar && (
+        {alcance && (
           <button
             type="button"
             className="btn btn-secundario mt-4 w-full sm:w-auto"
@@ -93,7 +94,7 @@ export function DatosTecnicos({
               setEditando(true);
             }}
           >
-            Editar datos técnicos
+            {alcance === "todo" ? "Editar datos técnicos" : "Editar material y medidas"}
           </button>
         )}
       </div>
@@ -144,6 +145,8 @@ export function DatosTecnicos({
         />
       </div>
 
+      {alcance === "todo" && (
+      <>
       <div>
         <span className="etiqueta">¿Requiere matriz?</span>
         <input type="hidden" name="requiereMatriz" value={matriz} />
@@ -211,6 +214,8 @@ export function DatosTecnicos({
             defaultValue={datos.matrizObservaciones ?? ""}
           />
         </div>
+      )}
+      </>
       )}
 
       {estado.error && (

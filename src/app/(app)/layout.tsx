@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requerirUsuario } from "@/lib/auth";
 import { puede } from "@/lib/permisos";
+import { cargarPermisos } from "@/lib/permisos-db";
+import { ProveedorPermisos } from "@/components/ProveedorPermisos";
 import { ROLES } from "@/lib/etiquetas";
 import { cerrarSesion } from "@/server/auth-acciones";
 import { SelectorTema } from "@/components/SelectorTema";
@@ -9,15 +11,13 @@ import { NavInferior, NavSuperior, type ItemNav } from "@/components/Navegacion"
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
   const u = await requerirUsuario();
 
-  const items: ItemNav[] = [
-    { href: "/solicitudes", texto: "Solicitudes", icono: "lista" },
-    { href: "/tablero", texto: "Tablero", icono: "tablero" },
-  ];
+  const matriz = await cargarPermisos();
+
+  const items: ItemNav[] = [{ href: "/solicitudes", texto: "Solicitudes", icono: "lista" }];
+  if (puede(u.rol, "tablero.ver")) items.push({ href: "/tablero", texto: "Tablero", icono: "tablero" });
   if (puede(u.rol, "solicitud.crear")) items.push({ href: "/solicitudes/nueva", texto: "Nueva", icono: "mas" });
-  if (puede(u.rol, "admin")) {
-    items.push({ href: "/metricas", texto: "Métricas", icono: "metricas" });
-    items.push({ href: "/admin/usuarios", texto: "Admin", icono: "usuarios" });
-  }
+  if (puede(u.rol, "metricas.ver")) items.push({ href: "/metricas", texto: "Métricas", icono: "metricas" });
+  if (puede(u.rol, "admin")) items.push({ href: "/admin/usuarios", texto: "Admin", icono: "usuarios" });
 
   return (
     <div className="min-h-dvh pb-20 sm:pb-0 print:pb-0">
@@ -46,7 +46,9 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl p-4">{children}</main>
+      <main className="mx-auto max-w-5xl p-4">
+        <ProveedorPermisos matriz={matriz}>{children}</ProveedorPermisos>
+      </main>
       <NavInferior items={items} />
     </div>
   );

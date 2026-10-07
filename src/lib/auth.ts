@@ -5,6 +5,7 @@ import type { Rol } from "@prisma/client";
 import { db } from "./db";
 import { COOKIE_SESION, DURACION_SESION_SEG, firmarToken, leerToken } from "./token";
 import { puede, type Accion } from "./permisos";
+import { cargarPermisos } from "./permisos-db";
 
 export type UsuarioSesion = {
   id: number;
@@ -31,6 +32,8 @@ export async function cerrarSesionActual() {
 
 // Se consulta la base en cada request para que un usuario desactivado pierda el acceso al instante.
 export const usuarioActual = cache(async (): Promise<UsuarioSesion | null> => {
+  // Toda verificación de permisos pasa primero por acá: se aprovecha para dejar cargados los vigentes.
+  await cargarPermisos();
   const uid = await leerToken((await cookies()).get(COOKIE_SESION)?.value);
   if (!uid) return null;
   const u = await db.usuario.findUnique({

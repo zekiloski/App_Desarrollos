@@ -15,6 +15,7 @@ import {
 } from "@/lib/etiquetas";
 import { fecha, fechaHora, hace, tamanoLegible } from "@/lib/formato";
 import { EXTENSIONES_ADJUNTO } from "@/lib/archivos";
+import { Progreso } from "@/components/Progreso";
 import { DatosTecnicos } from "./DatosTecnicos";
 import { EditorProcesos } from "./EditorProcesos";
 import { Adjuntos } from "./Adjuntos";
@@ -150,6 +151,9 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
         <p className="text-sm text-slate-500">
           Ingresó el {fechaHora(s.fechaIngreso)} ({hace(s.fechaIngreso)}) · Último movimiento {hace(s.fechaUltimoMovimiento)}
         </p>
+        <div className="mt-4">
+          <Progreso estado={s.estado} tipoIngreso={s.tipoIngreso} enEspera={s.enEspera} aprobada={s.aprobada} />
+        </div>
         {s.enEspera && s.motivoEspera && (
           <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
             <strong>En espera:</strong> {s.motivoEspera}
@@ -171,6 +175,7 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
           aprobada: s.aprobada,
           codigoPieza: s.codigoPieza,
           requiereMatriz: s.requiereMatriz,
+          etiquetaQr: s.etiquetaQr,
         }}
         rol={u.rol}
       />
@@ -193,7 +198,7 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
             <h2 className="titulo-seccion">Datos técnicos</h2>
             <DatosTecnicos
               solicitudId={s.id}
-              puedeEditar={editaTecnico}
+              alcance={editaTecnico ? "todo" : abierta && puede(u.rol, "material.editar") ? "basico" : null}
               datos={{
                 material: s.material,
                 espesor: s.espesor,
@@ -237,6 +242,7 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
             <h2 className="titulo-seccion">Fotos ({s.fotos.length})</h2>
             <GaleriaFotos
               solicitudId={s.id}
+              puedeAgregar={puede(u.rol, "fotos.agregar")}
               fotos={s.fotos.map((f) => ({
                 id: f.id,
                 url: `/api/archivos/${f.ruta}`,
@@ -363,8 +369,13 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
                     personas={personas}
                   />
                   <Link href={`/solicitudes/${s.id}/etiqueta`} className="btn btn-secundario mt-2 w-full">
-                    Etiqueta con QR
+                    {s.etiquetaQr === "IMPRESA" ? "Volver a imprimir la etiqueta QR" : "Generar etiqueta con QR"}
                   </Link>
+                  <p className="mt-1 text-center text-xs text-slate-500">
+                    {s.etiquetaQr === "IMPRESA" && "Etiqueta ya generada."}
+                    {s.etiquetaQr === "PENDIENTE" && "Etiqueta todavía sin generar."}
+                    {s.etiquetaQr === "NO_REQUIERE" && "Se indicó que no hace falta etiqueta."}
+                  </p>
                 </>
               )}
               {s.movimientosUbicacion.length > 1 && (
