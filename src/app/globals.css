@@ -1,0 +1,50 @@
+/* theme(static) publica toda la paleta como variables: el tema oscuro las necesita para mezclar colores. */
+@import "tailwindcss" theme(static);
+@import "./tema-oscuro.css";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Colores con nombre propio: los que no deben invertirse en modo oscuro.
+     superficie = fondo de tarjetas y campos; marca y peligro = fondos sólidos con texto blanco. */
+  --color-superficie: #ffffff;
+  --color-marca: #1d4ed8;
+  --color-marca-fuerte: #1e40af;
+  --color-peligro: #dc2626;
+  --color-peligro-fuerte: #b91c1c;
+}
+
+body {
+  @apply bg-slate-100 text-slate-900 antialiased;
+}
+
+@layer components {
+  /* Botones altos (48 px) para usar con el dedo o con guantes en planta. */
+  .btn {
+    @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold transition select-none disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primario {
+    @apply bg-marca hover:bg-marca-fuerte active:bg-marca-fuerte text-white shadow-sm;
+  }
+  .btn-secundario {
+    @apply border border-slate-300 bg-superficie text-slate-800 hover:bg-slate-50 active:bg-slate-100;
+  }
+  .campo {
+    @apply block min-h-12 w-full rounded-xl border border-slate-300 bg-superficie px-4 py-2.5 text-base text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 focus:outline-none;
+  }
+  .campo-error {
+    @apply border-red-500 focus:border-red-600 focus:ring-red-200;
+  }
+  .etiqueta {
+    @apply mb-1.5 block text-sm font-semibold text-slate-700;
+  }
+  .tarjeta {
+    @apply rounded-2xl border border-slate-200 bg-superficie p-4 shadow-sm sm:p-5;
+  }
+  .titulo-seccion {
+    @apply mb-3 text-sm font-bold tracking-wide text-slate-500 uppercase;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap;
+  }
+}

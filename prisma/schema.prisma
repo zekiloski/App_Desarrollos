@@ -1,0 +1,317 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  VENDEDOR
+  RECEPCION
+  OFICINA_TECNICA
+  PRODUCCION
+  ADMIN
+}
+
+enum Estado {
+  INGRESADA
+  RECIBIDA_EN_PLANTA
+  EN_ANALISIS
+  MEDICIONES_PLANO
+  DEFINICION_PROCESOS
+  EVALUACION_MATRIZ
+  APROBADA
+  RECHAZADA
+  CODIGO_CREADO
+  CARGADA_EN_PRODUCCION
+  CERRADA
+}
+
+enum TipoIngreso {
+  FOTOS
+  FISICA
+  AMBAS
+}
+
+enum Urgencia {
+  BAJA
+  NORMAL
+  ALTA
+  URGENTE
+}
+
+enum RequiereMatriz {
+  SIN_EVALUAR
+  SI
+  NO
+}
+
+enum TipoAdjunto {
+  PLANO
+  IMAGEN
+  DOCUMENTO
+}
+
+enum CanalNotificacion {
+  EMAIL
+  WHATSAPP
+}
+
+enum EstadoNotificacion {
+  PENDIENTE
+  ENVIADA
+  ERROR
+}
+
+model Usuario {
+  id           Int      @id @default(autoincrement())
+  nombre       String   @db.VarChar(120)
+  usuario      String   @unique @db.VarChar(60)
+  email        String   @unique @db.VarChar(160)
+  passwordHash String   @db.VarChar(100)
+  rol          Rol
+  telefono     String?  @db.VarChar(40)
+  activo       Boolean  @default(true)
+  creadoEl     DateTime @default(now())
+  actualizadoEl DateTime @updatedAt
+
+  solicitudesVendidas   Solicitud[] @relation("SolicitudVendedor")
+  solicitudesCreadas    Solicitud[] @relation("SolicitudCreadaPor")
+  piezasEnPoder         Solicitud[] @relation("SolicitudTenidaPor")
+  codigosCargados       Solicitud[] @relation("SolicitudCodigoPor")
+  cargasEnProduccion    Solicitud[] @relation("SolicitudProduccionPor")
+  fotos                 Foto[]
+  adjuntos              Adjunto[]
+  movimientosEstado     MovimientoEstado[]
+  movimientosUbicacion  MovimientoUbicacion[] @relation("UbicacionRegistradaPor")
+  ubicacionesEnPoder    MovimientoUbicacion[] @relation("UbicacionTenidaPor")
+  comentarios           Comentario[]
+  notificaciones        Notificacion[]
+  exportaciones         ExportacionProduccion[]
+}
+
+model Cliente {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @unique @db.VarChar(150)
+  contacto  String?  @db.VarChar(150)
+  telefono  String?  @db.VarChar(40)
+  email     String?  @db.VarChar(160)
+  localidad String?  @db.VarChar(120)
+  creadoEl  DateTime @default(now())
+
+  solicitudes Solicitud[]
+}
+
+// Correlativo por año para el N° de solicitud (ND-AAAA-NNNN).
+model Contador {
+  anio   Int @id
+  ultimo Int @default(0)
+}
+
+model Solicitud {
+  id          Int    @id @default(autoincrement())
+  numero      String @unique @db.VarChar(20)
+  anio        Int
+  correlativo Int
+  tokenQr     String @unique @db.VarChar(40)
+
+  clienteId    Int
+  cliente      Cliente @relation(fields: [clienteId], references: [id])
+  vendedorId   Int
+  vendedor     Usuario @relation("SolicitudVendedor", fields: [vendedorId], references: [id])
+  creadaPorId  Int
+  creadaPor    Usuario @relation("SolicitudCreadaPor", fields: [creadaPorId], references: [id])
+  fechaIngreso DateTime @default(now())
+  tipoIngreso  TipoIngreso
+
+  descripcion      String   @db.Text
+  cantidadEstimada Int?
+  urgencia         Urgencia @default(NORMAL)
+  implemento       String?  @db.VarChar(200)
+
+  estado                Estado   @default(INGRESADA)
+  enEspera              Boolean  @default(false)
+  motivoEspera          String?  @db.VarChar(500)
+  fechaUltimoMovimiento DateTime @default(now())
+
+  // Ubicación física actual (el historial está en MovimientoUbicacion)
+  sector      String?  @db.VarChar(100)
+  estante     String?  @db.VarChar(100)
+  tenidaPorId Int?
+  tenidaPor   Usuario? @relation("SolicitudTenidaPor", fields: [tenidaPorId], references: [id])
+
+  material    String? @db.VarChar(150)
+  espesor     String? @db.VarChar(60)
+  dimensiones String? @db.VarChar(250)
+
+  requiereMatriz           RequiereMatriz @default(SIN_EVALUAR)
+  matrizObservaciones      String?        @db.Text
+  matrizCostoEstimado      Decimal?       @db.Decimal(14, 2)
+  matrizTiempoEstimadoDias Int?
+
+  aprobada      Boolean?
+  motivoRechazo String?  @db.Text
+
+  // Código ingresado a mano por Oficina Técnica: sin patrón, solo único.
+  codigoPieza        String?   @unique @db.VarChar(100)
+  codigoCargadoPorId Int?
+  codigoCargadoPor   Usuario?  @relation("SolicitudCodigoPor", fields: [codigoCargadoPorId], references: [id])
+  codigoCargadoEl    DateTime?
+
+  cargadaEnProduccionPorId Int?
+  cargadaEnProduccionPor   Usuario?  @relation("SolicitudProduccionPor", fields: [cargadaEnProduccionPorId], references: [id])
+  cargadaEnProduccionEl    DateTime?
+
+  // Reservado para la integración directa con el sistema de producción.
+  idExternoProduccion String?   @db.VarChar(100)
+  sincronizadaEl      DateTime?
+
+  creadoEl      DateTime @default(now())
+  actualizadoEl DateTime @updatedAt
+
+  fotos                Foto[]
+  adjuntos             Adjunto[]
+  procesos             SolicitudProceso[]
+  movimientosEstado    MovimientoEstado[]
+  movimientosUbicacion MovimientoUbicacion[]
+  comentarios          Comentario[]
+  notificaciones       Notificacion[]
+  exportaciones        ExportacionProduccion[]
+
+  @@unique([anio, correlativo])
+  @@index([estado])
+  @@index([vendedorId])
+  @@index([clienteId])
+  @@index([fechaIngreso])
+  @@index([fechaUltimoMovimiento])
+}
+
+model Foto {
+  id            Int       @id @default(autoincrement())
+  solicitudId   Int
+  solicitud     Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  ruta          String    @db.VarChar(255)
+  rutaMiniatura String    @db.VarChar(255)
+  tamano        Int
+  subidaPorId   Int
+  subidaPor     Usuario   @relation(fields: [subidaPorId], references: [id])
+  creadoEl      DateTime  @default(now())
+
+  @@index([solicitudId])
+}
+
+model Adjunto {
+  id             Int         @id @default(autoincrement())
+  solicitudId    Int
+  solicitud      Solicitud   @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  tipo           TipoAdjunto
+  nombreOriginal String      @db.VarChar(255)
+  ruta           String      @db.VarChar(255)
+  mime           String      @db.VarChar(120)
+  tamano         Int
+  subidoPorId    Int
+  subidoPor      Usuario     @relation(fields: [subidoPorId], references: [id])
+  creadoEl       DateTime    @default(now())
+
+  @@index([solicitudId])
+}
+
+model Proceso {
+  id     Int     @id @default(autoincrement())
+  nombre String  @unique @db.VarChar(100)
+  activo Boolean @default(true)
+  orden  Int     @default(0)
+
+  solicitudes SolicitudProceso[]
+}
+
+model SolicitudProceso {
+  id            Int       @id @default(autoincrement())
+  solicitudId   Int
+  solicitud     Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  procesoId     Int
+  proceso       Proceso   @relation(fields: [procesoId], references: [id])
+  orden         Int
+  observaciones String?   @db.VarChar(500)
+
+  @@index([solicitudId, orden])
+}
+
+model MovimientoEstado {
+  id             Int       @id @default(autoincrement())
+  solicitudId    Int
+  solicitud      Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  estadoAnterior Estado?
+  estadoNuevo    Estado
+  // Las entradas y salidas de "En espera" se registran con el mismo estado y esta marca.
+  enEspera       Boolean   @default(false)
+  motivo         String?   @db.VarChar(500)
+  usuarioId      Int
+  usuario        Usuario   @relation(fields: [usuarioId], references: [id])
+  fecha          DateTime  @default(now())
+
+  @@index([solicitudId, fecha])
+}
+
+model MovimientoUbicacion {
+  id          Int       @id @default(autoincrement())
+  solicitudId Int
+  solicitud   Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  sector      String?   @db.VarChar(100)
+  estante     String?   @db.VarChar(100)
+  tenidaPorId Int?
+  tenidaPor   Usuario?  @relation("UbicacionTenidaPor", fields: [tenidaPorId], references: [id])
+  usuarioId   Int
+  usuario     Usuario   @relation("UbicacionRegistradaPor", fields: [usuarioId], references: [id])
+  fecha       DateTime  @default(now())
+
+  @@index([solicitudId, fecha])
+}
+
+model Comentario {
+  id          Int       @id @default(autoincrement())
+  solicitudId Int
+  solicitud   Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  usuarioId   Int
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id])
+  texto       String    @db.Text
+  fecha       DateTime  @default(now())
+
+  @@index([solicitudId, fecha])
+}
+
+model Notificacion {
+  id          Int                @id @default(autoincrement())
+  usuarioId   Int
+  usuario     Usuario            @relation(fields: [usuarioId], references: [id])
+  solicitudId Int?
+  solicitud   Solicitud?         @relation(fields: [solicitudId], references: [id], onDelete: SetNull)
+  canal       CanalNotificacion  @default(EMAIL)
+  asunto      String             @db.VarChar(200)
+  cuerpo      String             @db.Text
+  estado      EstadoNotificacion @default(PENDIENTE)
+  error       String?            @db.VarChar(500)
+  creadaEl    DateTime           @default(now())
+  enviadaEl   DateTime?
+
+  @@index([estado])
+}
+
+model Configuracion {
+  clave String @id @db.VarChar(60)
+  valor String @db.VarChar(500)
+}
+
+model ExportacionProduccion {
+  id          Int       @id @default(autoincrement())
+  solicitudId Int
+  solicitud   Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  usuarioId   Int
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id])
+  formato     String    @db.VarChar(10)
+  fecha       DateTime  @default(now())
+
+  @@index([solicitudId])
+}

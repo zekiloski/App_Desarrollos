@@ -1,0 +1,2 @@
+# No editar a mano. Debe versionarse junto con las migraciones.
+provider = "mysql"
