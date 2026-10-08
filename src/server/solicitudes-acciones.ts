@@ -9,6 +9,8 @@ import { requerirUsuario } from "@/lib/auth";
 import { puede } from "@/lib/permisos";
 import { puedeVerSolicitud, siguienteNumero } from "@/lib/solicitudes";
 import { avisarNuevaSolicitud } from "@/lib/notificaciones/avisos";
+import { borrarCarpetaSolicitud } from "@/lib/archivos";
+import type { ResultadoAccion } from "./estados-acciones";
 
 export type ResultadoCrear =
   | { ok: true; id: number; numero: string }
@@ -136,7 +138,33 @@ export async function crearSolicitud(fd: FormData): Promise<ResultadoCrear> {
   }
 }
 
-export type EstadoComentario = { error?: string; enviado?: number };
+// Borra la solicitud con todo lo que cuelga de ella (la base lo hace en cascada) y sus archivos.
+// El cliente queda cargado y los avisos ya enviados se conservan sin la referencia.
+export async function eliminarSolicitud(solicitudId: number): Promise<ResultadoAccion> {
+  const u = await requerirUsuario();
+  if (!puede(u.rol, "solicitud.eliminar")) return { ok: false, error: "Tu rol no puede eliminar solicitudes." };
+  if (!Number.isInteger(solicitudId) || !(await puedeVerSolicitud(u, solicitudId))) {
+    return { ok: false, error: "Solicitud no encontrada." };
+  }
+
+  try {
+    await db.solicitud.delete({ where: { id: solicitudId } });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+      return { ok: false, error: "La solicitud ya no existe." };
+    }
+    console.error("Error al eliminar solicitud", e);
+    return { ok: false, error: "No se pudo eliminar la solicitud. Probá de nuevo." };
+  }
+  await borrarCarpetaSolicitud(solicitudId);
+
+  revalidatePath("/solicitudes");
+  revalidatePath("/tablero");
+  revalidatePath("/metricas");
+  return { ok: true };
+}
+
+export type EstadoComentario ={ error?: string; enviado?: number };
 
 export async function agregarComentario(
   solicitudId: number,

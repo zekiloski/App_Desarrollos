@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
@@ -69,6 +69,12 @@ export async function guardarAdjunto(solicitudId: number, extension: string, con
 export async function borrarArchivo(rutaRelativa: string) {
   const abs = rutaAbsoluta(rutaRelativa);
   if (abs) await unlink(abs).catch(() => {});
+}
+
+// Borra la carpeta completa de una solicitud (fotos y adjuntos).
+export async function borrarCarpetaSolicitud(solicitudId: number) {
+  const abs = rutaAbsoluta(`solicitudes/${solicitudId}`);
+  if (abs) await rm(abs, { recursive: true, force: true }).catch(() => {});
 }
 
 // Recomprime la foto (máx. 1600 px, JPEG) y genera la miniatura. Lanza si el archivo no es una imagen.

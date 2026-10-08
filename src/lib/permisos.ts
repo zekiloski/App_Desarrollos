@@ -12,6 +12,7 @@ export type Accion =
   | "solicitud.espera"
   | "estado.retroceder"
   | "solicitud.cerrar"
+  | "solicitud.eliminar"
   | "tecnico.editar"
   | "solicitud.aprobar"
   | "codigo.gestionar"
@@ -37,6 +38,8 @@ export const PERMISOS_POR_DEFECTO: MatrizPermisos = {
   "solicitud.espera": ["RECEPCION", "OFICINA_TECNICA", "PRODUCCION", "ADMIN"],
   "estado.retroceder": ["OFICINA_TECNICA", "ADMIN"],
   "solicitud.cerrar": ["RECEPCION", "OFICINA_TECNICA", "ADMIN"],
+  // Borra la solicitud con todo su historial y archivos: de fábrica, solo el administrador.
+  "solicitud.eliminar": ["ADMIN"],
   "tecnico.editar": ["OFICINA_TECNICA", "PRODUCCION", "ADMIN"],
   "solicitud.aprobar": ["OFICINA_TECNICA", "PRODUCCION", "ADMIN"],
   "codigo.gestionar": ["OFICINA_TECNICA", "ADMIN"],
@@ -65,6 +68,11 @@ export const GRUPOS_PERMISOS: { titulo: string; permisos: { accion: Accion; nomb
         detalle: "No incluye la matriz, los procesos ni los planos.",
       },
       { accion: "comentar", nombre: "Escribir comentarios" },
+      {
+        accion: "solicitud.eliminar",
+        nombre: "Eliminar solicitudes",
+        detalle: "Borra también fotos, planos, comentarios e historial. No se puede deshacer.",
+      },
     ],
   },
   {

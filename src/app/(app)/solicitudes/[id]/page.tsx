@@ -25,6 +25,7 @@ import { GaleriaFotos } from "./GaleriaFotos";
 import { FormComentario } from "./FormComentario";
 import { AccionesEstado } from "./AccionesEstado";
 import { FormUbicacion } from "./FormUbicacion";
+import { BotonEliminar } from "./BotonEliminar";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -416,6 +417,8 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
             </ol>
             <p className="mt-4 text-xs text-slate-400">Creada el {fecha(s.creadoEl)}</p>
           </section>
+
+          {puede(u.rol, "solicitud.eliminar") && <BotonEliminar solicitudId={s.id} numero={s.numero} />}
         </div>
       </div>
     </div>
