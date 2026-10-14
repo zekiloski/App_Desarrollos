@@ -34,33 +34,34 @@ const PROCESOS = [
   "Armado",
 ];
 
+// Los usuarios se crean solo en una base sin usuarios (la primera vez): después se administran desde la
+// app, y un usuario borrado o renombrado no vuelve a aparecer.
 // Con ADMIN_PASSWORD (servidor) se crea solo "admin" con esa contraseña. Sin ella, fuera de producción
 // (uso local), se crean los usuarios demo; en producción no se crea ningún usuario con contraseña conocida.
 export async function cargarDatosIniciales(db: PrismaClient, adminPassword = process.env.ADMIN_PASSWORD?.trim()) {
-  if (adminPassword && adminPassword.length < 8) {
-    throw new Error("ADMIN_PASSWORD tiene que tener al menos 8 caracteres.");
-  }
-  const usuarios = adminPassword
-    ? [{ usuario: "admin", nombre: "Administrador", rol: "ADMIN" as Rol, password: adminPassword }]
-    : process.env.NODE_ENV === "production"
-      ? []
-      : USUARIOS_DEMO;
-  if (!adminPassword && process.env.NODE_ENV === "production" && (await db.usuario.count()) === 0) {
-    console.error("[datos iniciales] Falta ADMIN_PASSWORD: no hay usuarios y no se creó el admin.");
-  }
-
-  for (const u of usuarios) {
-    await db.usuario.upsert({
-      where: { usuario: u.usuario },
-      update: {},
-      create: {
-        usuario: u.usuario,
-        nombre: u.nombre,
-        rol: u.rol,
-        email: `${u.usuario}@ejemplo.local`,
-        passwordHash: await bcrypt.hash(u.password, 10),
-      },
-    });
+  if ((await db.usuario.count()) === 0) {
+    if (adminPassword && adminPassword.length < 8) {
+      throw new Error("ADMIN_PASSWORD tiene que tener al menos 8 caracteres.");
+    }
+    const usuarios = adminPassword
+      ? [{ usuario: "admin", nombre: "Administrador", rol: "ADMIN" as Rol, password: adminPassword }]
+      : process.env.NODE_ENV === "production"
+        ? []
+        : USUARIOS_DEMO;
+    if (usuarios.length === 0) {
+      console.error("[datos iniciales] Falta ADMIN_PASSWORD: no hay usuarios y no se creó el admin.");
+    }
+    for (const u of usuarios) {
+      await db.usuario.create({
+        data: {
+          usuario: u.usuario,
+          nombre: u.nombre,
+          rol: u.rol,
+          email: `${u.usuario}@ejemplo.local`,
+          passwordHash: await bcrypt.hash(u.password, 10),
+        },
+      });
+    }
   }
 
   for (const [i, nombre] of PROCESOS.entries()) {
