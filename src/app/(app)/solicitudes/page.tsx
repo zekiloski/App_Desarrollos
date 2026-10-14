@@ -62,7 +62,7 @@ export default async function PaginaSolicitudes({
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{veTodas ? "Solicitudes" : "Mis solicitudes"}</h1>
         {puede(u.rol, "solicitud.crear") && (
-          <Link href="/solicitudes/nueva" className="btn btn-primario hidden sm:inline-flex">
+          <Link href="/solicitudes/nueva" className="btn btn-primario min-h-11 px-4 sm:min-h-12 sm:px-5">
             + Nueva solicitud
           </Link>
         )}

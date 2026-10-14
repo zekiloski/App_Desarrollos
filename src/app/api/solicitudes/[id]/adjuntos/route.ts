@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { usuarioActual } from "@/lib/auth";
 import { puede } from "@/lib/permisos";
 import { filtroVisibilidad } from "@/lib/solicitudes";
+import { etapaAlcanzada } from "@/lib/estados";
 import { EXTENSIONES_ADJUNTO, TAMANO_MAX_ADJUNTO, guardarAdjunto } from "@/lib/archivos";
 
 const MAX_ADJUNTOS_POR_SOLICITUD = 40;
@@ -25,6 +26,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!s) return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 });
   if (s.estado === "CERRADA") {
     return NextResponse.json({ error: "La solicitud está cerrada: ya no se puede modificar." }, { status: 400 });
+  }
+  if (!etapaAlcanzada(s.estado, "planos")) {
+    return NextResponse.json(
+      { error: "Los planos se adjuntan cuando la solicitud llega a la etapa de planimetría." },
+      { status: 400 },
+    );
   }
   if (s._count.adjuntos >= MAX_ADJUNTOS_POR_SOLICITUD) {
     return NextResponse.json(

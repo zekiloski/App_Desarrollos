@@ -7,6 +7,7 @@ import { PERMISOS_POR_DEFECTO, ROLES_CONFIGURABLES, puede, type Accion } from "@
 import { PREFIJO_PERMISO, esAccionConfigurable } from "@/lib/permisos-db";
 import { CLAVE_DIAS_ALERTA } from "@/lib/config";
 import { enviarPendientes } from "@/lib/notificaciones";
+import type { ResultadoAccion } from "./estados-acciones";
 
 export type EstadoConfig = { error?: string; guardado?: number };
 
@@ -58,6 +59,23 @@ export async function guardarPermisos(_prev: EstadoPermisos, fd: FormData): Prom
 export type EstadoEnvio ={ mensaje?: string; error?: string };
 
 // Reintenta los avisos con error y envía todo lo pendiente.
+// Borra un aviso o, con "todos", la lista completa (enviados, pendientes y con error).
+// Solo es el registro: lo que ya se envió no se recupera, y lo pendiente ya no se va a enviar.
+export async function eliminarAvisos(cuales: number | "todos"): Promise<ResultadoAccion> {
+  const u = await requerirUsuario();
+  if (!puede(u.rol, "admin")) return { ok: false, error: "Solo Gerencia / Admin puede eliminar avisos." };
+
+  if (cuales === "todos") {
+    await db.notificacion.deleteMany({});
+  } else {
+    if (!Number.isInteger(cuales)) return { ok: false, error: "Aviso no válido." };
+    await db.notificacion.deleteMany({ where: { id: cuales } });
+  }
+
+  revalidatePath("/admin/avisos");
+  return { ok: true };
+}
+
 export async function enviarAvisosPendientes(_prev: EstadoEnvio, _fd: FormData): Promise<EstadoEnvio> {
   const u = await requerirUsuario();
   if (!puede(u.rol, "admin")) return { error: "Solo Gerencia / Admin puede enviar avisos." };

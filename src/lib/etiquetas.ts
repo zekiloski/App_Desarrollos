@@ -54,7 +54,7 @@ export const ACCION_ESTADO: Record<Estado, string> = {
   APROBADA: "Aprobar",
   RECHAZADA: "Rechazar",
   CODIGO_CREADO: "Cargar código de pieza",
-  CARGADA_EN_PRODUCCION: "Marcar como cargada en producción",
+  CARGADA_EN_PRODUCCION: "Marcar como código cargado en el sistema productivo",
   CERRADA: "Cerrar / devolver al cliente",
 };
 

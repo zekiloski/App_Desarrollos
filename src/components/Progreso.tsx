@@ -6,13 +6,13 @@ const CORTO: Record<Estado, string> = {
   INGRESADA: "Ingresada",
   RECIBIDA_EN_PLANTA: "Recibida",
   EN_ANALISIS: "Análisis",
-  MEDICIONES_PLANO: "Mediciones",
+  MEDICIONES_PLANO: "Planimetría",
   DEFINICION_PROCESOS: "Procesos",
   EVALUACION_MATRIZ: "Matriz",
   APROBADA: "Aprobada",
   RECHAZADA: "Rechazada",
   CODIGO_CREADO: "Código",
-  CARGADA_EN_PRODUCCION: "En producción",
+  CARGADA_EN_PRODUCCION: "Código cargado al Sistema",
   CERRADA: "Cerrada",
 };
 

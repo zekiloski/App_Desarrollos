@@ -23,7 +23,8 @@ Para probar desde el celular en la misma red wifi: `npm run dev -- -H 0.0.0.0` y
 | tecnica | demo1234 | Oficina Técnica |
 | produccion | demo1234 | Encargado de Producción |
 
-Antes de salir a producción: cambiar la contraseña de `admin` y desactivar los usuarios demo.
+Son solo para uso local. En el servidor se define `ADMIN_PASSWORD` y se crea únicamente `admin`
+(ver [DESPLIEGUE-HOSTINGER.md](DESPLIEGUE-HOSTINGER.md)).
 
 ## Comandos
 
@@ -32,6 +33,7 @@ Antes de salir a producción: cambiar la contraseña de `admin` y desactivar los
 | `npm run dev` | Servidor de desarrollo |
 | `npm run build` / `npm start` | Compilar y correr en producción |
 | `npm run db:setup` | Aplica migraciones y carga datos iniciales (no pisa datos existentes) |
+| `npm run build:produccion` | En el servidor: migraciones, datos iniciales y compilación, en un solo paso |
 | `npm run db:migrate` | Crea una migración nueva después de cambiar `prisma/schema.prisma` |
 | `npm run typecheck` | Verifica tipos |
 

@@ -12,10 +12,166 @@
   --color-marca-fuerte: #1e40af;
   --color-peligro: #dc2626;
   --color-peligro-fuerte: #b91c1c;
+  /* Segundo color de los degradés de marca. */
+  --color-acento: #4f46e5;
+  /* Fondo general de la página. */
+  --color-fondo: #eef2f8;
+}
+
+/* Valores del tema oscuro para los colores propios (tema-oscuro.css es generado: no se toca). */
+:root.dark {
+  --color-acento: #4f46e5;
+  --color-fondo: #0b1120;
 }
 
 body {
-  @apply bg-slate-100 text-slate-900 antialiased;
+  @apply bg-fondo text-slate-900 antialiased;
+  background-image:
+    radial-gradient(60rem 30rem at 100% -10%, rgb(79 70 229 / 0.07), transparent 70%),
+    radial-gradient(50rem 25rem at 0% 0%, rgb(14 165 233 / 0.06), transparent 70%);
+  background-attachment: fixed;
+}
+
+/* Menú lateral y barra móvil: blancos en el tema claro, azul marino en el oscuro. */
+:root {
+  --menu-fondo: linear-gradient(180deg, #ffffff 0%, #f8faff 60%, #f1f4fd 100%);
+  --menu-barra: #ffffff;
+  --menu-texto-fuerte: #0f172a;
+  --menu-texto: #475569;
+  --menu-tenue: #94a3b8;
+  --menu-borde: #e2e8f0;
+  --menu-hover: rgb(15 23 42 / 0.05);
+  --menu-activo: #eef2ff;
+  --menu-icono-fondo: #f1f5f9;
+  --menu-sombra: 1px 0 0 #e2e8f0, 4px 0 24px -12px rgb(15 23 42 / 0.15);
+}
+:root.dark {
+  --menu-fondo: linear-gradient(180deg, #0d1527 0%, #101a33 55%, #14163a 100%);
+  --menu-barra: linear-gradient(90deg, #0d1527, #14163a);
+  --menu-texto-fuerte: #ffffff;
+  --menu-texto: rgb(255 255 255 / 0.7);
+  --menu-tenue: rgb(255 255 255 / 0.4);
+  --menu-borde: rgb(255 255 255 / 0.1);
+  --menu-hover: rgb(255 255 255 / 0.08);
+  --menu-activo: rgb(255 255 255 / 0.12);
+  --menu-icono-fondo: rgb(255 255 255 / 0.06);
+  --menu-sombra: 1px 0 0 rgb(255 255 255 / 0.06);
+}
+/* Tema "Clásico ERP": verde petróleo y crema, como el ERP de la empresa. Es un tema claro. */
+:root.erp {
+  --color-superficie: #f6f4ec;
+  --color-marca: #1f6464;
+  --color-marca-fuerte: #174d4d;
+  --color-acento: #1f6464;
+  --color-fondo: #ebe7d8;
+
+  /* Grises cálidos para fondos y bordes. */
+  --color-slate-50: #efece1;
+  --color-slate-100: #e6e2d3;
+  --color-slate-200: #d6d1c0;
+  --color-slate-300: #bdb7a5;
+
+  /* Los azules (enlaces, números, selección) pasan a verde petróleo. */
+  --color-blue-50: #e3eeec;
+  --color-blue-100: #d2e5e2;
+  --color-blue-200: #a9cdc8;
+  --color-blue-600: #1f6464;
+  --color-blue-700: #1f6464;
+  --color-blue-800: #174d4d;
+
+  /* Esquinas más rectas. */
+  --radius-lg: 4px;
+  --radius-xl: 5px;
+  --radius-2xl: 6px;
+
+  --menu-fondo: linear-gradient(180deg, #1b4f52 0%, #22625f 55%, #2b7470 100%);
+  --menu-barra: linear-gradient(90deg, #1b4f52, #2b7470);
+  --menu-texto-fuerte: #ffffff;
+  --menu-texto: rgb(255 255 255 / 0.82);
+  --menu-tenue: rgb(255 255 255 / 0.55);
+  --menu-borde: rgb(255 255 255 / 0.14);
+  --menu-hover: rgb(255 255 255 / 0.1);
+  --menu-activo: rgb(255 255 255 / 0.16);
+  --menu-icono-fondo: rgb(255 255 255 / 0.1);
+  --menu-sombra: 2px 0 6px rgb(0 0 0 / 0.15);
+}
+:root.erp body {
+  background-image: none;
+}
+:root.erp .tarjeta {
+  border-color: #cfc9b6;
+  box-shadow: none;
+}
+:root.erp .btn-primario {
+  background-image: none;
+  box-shadow: none;
+}
+:root.erp .btn-primario:hover {
+  background-color: var(--color-marca-fuerte);
+  filter: none;
+}
+:root.erp .btn-secundario {
+  border-color: var(--color-marca);
+  color: var(--color-marca);
+  box-shadow: none;
+}
+:root.erp .menu-enlace-activo .menu-icono {
+  background-image: none;
+  background-color: rgb(255 255 255 / 0.22);
+  box-shadow: none;
+}
+:root.erp .menu-enlace-activo::before {
+  background-color: #f2c94c;
+}
+:root.erp .avatar {
+  background-image: none;
+  background-color: #c9a227;
+}
+:root.erp .titulo-seccion {
+  color: #3d3a32;
+}
+:root.erp .titulo-seccion::before {
+  background-image: none;
+  background-color: var(--color-marca);
+}
+
+.menu-lateral {
+  background: var(--menu-fondo);
+  box-shadow: var(--menu-sombra);
+}
+.barra-movil {
+  background: var(--menu-barra);
+  border-bottom: 1px solid var(--menu-borde);
+  box-shadow: 0 4px 16px -8px rgb(15 23 42 / 0.25);
+}
+.menu-texto-fuerte {
+  color: var(--menu-texto-fuerte);
+}
+.menu-texto {
+  color: var(--menu-texto);
+}
+.menu-tenue {
+  color: var(--menu-tenue);
+}
+.menu-borde {
+  border-color: var(--menu-borde);
+}
+/* Botones chicos del menú (cerrar, tema, salir). */
+.menu-boton {
+  border-color: var(--menu-borde);
+  color: var(--menu-texto);
+}
+.menu-boton:hover {
+  background: var(--menu-hover);
+  color: var(--menu-texto-fuerte);
+}
+
+/* Fondo de la pantalla de ingreso. */
+.fondo-ingreso {
+  background:
+    radial-gradient(40rem 30rem at 15% 10%, rgb(56 189 248 / 0.35), transparent 60%),
+    radial-gradient(40rem 30rem at 90% 90%, rgb(99 102 241 / 0.4), transparent 60%),
+    linear-gradient(160deg, #0f1e3d, #1a1f4d);
 }
 
 @layer components {
@@ -24,10 +180,11 @@ body {
     @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold transition select-none disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primario {
-    @apply bg-marca hover:bg-marca-fuerte active:bg-marca-fuerte text-white shadow-sm;
+    @apply bg-marca text-white shadow-md shadow-blue-500/25 hover:brightness-110 active:brightness-95;
+    background-image: linear-gradient(135deg, var(--color-marca), var(--color-acento));
   }
   .btn-secundario {
-    @apply border border-slate-300 bg-superficie text-slate-800 hover:bg-slate-50 active:bg-slate-100;
+    @apply border border-slate-300 bg-superficie text-slate-800 shadow-xs hover:border-slate-400 hover:bg-slate-50 active:bg-slate-100;
   }
   .campo {
     @apply block min-h-12 w-full rounded-xl border border-slate-300 bg-superficie px-4 py-2.5 text-base text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 focus:outline-none;
@@ -39,12 +196,110 @@ body {
     @apply mb-1.5 block text-sm font-semibold text-slate-700;
   }
   .tarjeta {
-    @apply rounded-2xl border border-slate-200 bg-superficie p-4 shadow-sm sm:p-5;
+    @apply rounded-2xl border border-slate-200 bg-superficie p-4 sm:p-5;
+    box-shadow:
+      0 1px 2px rgb(15 23 42 / 0.04),
+      0 6px 20px -8px rgb(15 23 42 / 0.12);
   }
+  /* Barrita de color antes del título, para ubicar rápido cada sección. */
   .titulo-seccion {
-    @apply mb-3 text-sm font-bold tracking-wide text-slate-500 uppercase;
+    @apply mb-3 flex items-center gap-2 text-sm font-bold tracking-wide text-slate-500 uppercase;
+  }
+  .titulo-seccion::before {
+    content: "";
+    @apply h-4 w-1 shrink-0 rounded-full;
+    background-image: linear-gradient(180deg, var(--color-marca), var(--color-acento));
+  }
+
+  /* Menú lateral */
+  .menu-grupo {
+    @apply mb-2 px-3 text-[11px] font-bold tracking-widest uppercase;
+    color: var(--menu-tenue);
+  }
+  .menu-enlace {
+    @apply relative flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition;
+    color: var(--menu-texto);
+  }
+  .menu-enlace:hover {
+    background: var(--menu-hover);
+    color: var(--menu-texto-fuerte);
+  }
+  .menu-icono {
+    @apply flex h-8 w-8 items-center justify-center rounded-lg transition;
+    background: var(--menu-icono-fondo);
+  }
+  .menu-enlace-activo,
+  .menu-enlace-activo:hover {
+    background: var(--menu-activo);
+    color: var(--menu-texto-fuerte);
+  }
+  .menu-enlace-activo::before {
+    content: "";
+    @apply absolute top-2 bottom-2 -left-3 w-1 rounded-r-full bg-sky-400;
+  }
+  .menu-enlace-activo .menu-icono {
+    @apply text-white shadow-md shadow-indigo-500/30;
+    background-image: linear-gradient(135deg, #0ea5e9, #6366f1);
+  }
+  /* Tabla de reportes */
+  .tabla-reporte th {
+    @apply border-b border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold tracking-wide whitespace-nowrap text-slate-500 uppercase;
+  }
+  .tabla-reporte td {
+    @apply border-b border-slate-200 px-3 py-3 align-top;
+  }
+  .tabla-reporte tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .tabla-reporte tbody tr:hover td {
+    @apply bg-slate-50;
   }
   .chip {
     @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap;
+  }
+}
+
+/* Impresión (reportes a PDF): hoja horizontal, sin fondos ni sombras. */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+  body {
+    background: #fff !important;
+    font-size: 11px;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  .tarjeta {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  .tarjeta:has(table) {
+    break-inside: auto;
+  }
+  .tabla-reporte,
+  .tabla-reporte .text-sm {
+    font-size: 10px;
+  }
+  .tabla-reporte .text-xs,
+  .tabla-reporte .chip {
+    font-size: 9px;
+  }
+  .tabla-reporte th,
+  .tabla-reporte td {
+    padding: 4px 6px;
+  }
+  .tabla-reporte tr {
+    break-inside: avoid;
+  }
+  .tabla-reporte thead {
+    display: table-header-group;
+  }
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
   }
 }

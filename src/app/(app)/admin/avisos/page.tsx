@@ -5,6 +5,7 @@ import { requerirPermiso } from "@/lib/auth";
 import { emailConfigurado } from "@/lib/notificaciones/email";
 import { fechaHora } from "@/lib/formato";
 import { BotonEnviarAvisos } from "./BotonEnviarAvisos";
+import { EliminarAviso, EliminarTodos } from "./EliminarAvisos";
 
 export const metadata: Metadata = { title: "Avisos" };
 
@@ -27,6 +28,7 @@ export default async function PaginaAvisos() {
   const cantidad = (e: keyof typeof ESTADO) => porEstado.find((x) => x.estado === e)?._count ?? 0;
   const configurado = emailConfigurado();
   const porEnviar = cantidad("PENDIENTE") + cantidad("ERROR");
+  const total = porEnviar + cantidad("ENVIADA");
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
@@ -56,6 +58,7 @@ export default async function PaginaAvisos() {
           <strong className="tabular-nums">{cantidad("ERROR")}</strong> con error
         </div>
         {porEnviar > 0 && <BotonEnviarAvisos />}
+        {total > 0 && <EliminarTodos cantidad={total} />}
       </div>
 
       {avisos.length === 0 ? (
@@ -63,24 +66,27 @@ export default async function PaginaAvisos() {
       ) : (
         <ul className="tarjeta divide-y divide-slate-200 py-1!">
           {avisos.map((a) => (
-            <li key={a.id} className="py-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={`chip ${ESTADO[a.estado].color}`}>{ESTADO[a.estado].nombre}</span>
-                <span className="text-xs text-slate-500">{fechaHora(a.creadaEl)}</span>
+            <li key={a.id} className="flex items-start gap-3 py-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`chip ${ESTADO[a.estado].color}`}>{ESTADO[a.estado].nombre}</span>
+                  <span className="text-xs text-slate-500">{fechaHora(a.creadaEl)}</span>
+                </div>
+                <div className="mt-1 font-semibold break-words">
+                  {a.solicitud ? (
+                    <Link href={`/solicitudes/${a.solicitud.id}`} className="text-blue-700 hover:underline">
+                      {a.asunto}
+                    </Link>
+                  ) : (
+                    a.asunto
+                  )}
+                </div>
+                <div className="text-sm text-slate-600">
+                  Para {a.usuario.nombre} <span className="text-slate-500">({a.usuario.email})</span>
+                </div>
+                {a.error && <div className="mt-1 text-sm break-words text-red-600">{a.error}</div>}
               </div>
-              <div className="mt-1 font-semibold break-words">
-                {a.solicitud ? (
-                  <Link href={`/solicitudes/${a.solicitud.id}`} className="text-blue-700 hover:underline">
-                    {a.asunto}
-                  </Link>
-                ) : (
-                  a.asunto
-                )}
-              </div>
-              <div className="text-sm text-slate-600">
-                Para {a.usuario.nombre} <span className="text-slate-500">({a.usuario.email})</span>
-              </div>
-              {a.error && <div className="mt-1 text-sm break-words text-red-600">{a.error}</div>}
+              <EliminarAviso id={a.id} asunto={a.asunto} />
             </li>
           ))}
         </ul>

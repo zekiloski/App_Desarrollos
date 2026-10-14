@@ -20,7 +20,7 @@ import { DatosTecnicos } from "./DatosTecnicos";
 import { EditorProcesos } from "./EditorProcesos";
 import { Adjuntos } from "./Adjuntos";
 import { CorregirCodigo } from "./CorregirCodigo";
-import { indiceEstado } from "@/lib/estados";
+import { etapaAlcanzada, indiceEstado } from "@/lib/estados";
 import { GaleriaFotos } from "./GaleriaFotos";
 import { FormComentario } from "./FormComentario";
 import { AccionesEstado } from "./AccionesEstado";
@@ -101,7 +101,12 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
   const abierta = s.estado !== "CERRADA";
   const editaTecnico = abierta && puede(u.rol, "tecnico.editar");
   const gestionaCodigo = puede(u.rol, "codigo.gestionar");
-  const catalogo = editaTecnico
+  // Planos y procesos se cargan al llegar a su etapa. Si volvió atrás con datos ya cargados, se ven sin editar.
+  const editaPlanos = editaTecnico && etapaAlcanzada(s.estado, "planos");
+  const editaProcesos = editaTecnico && etapaAlcanzada(s.estado, "procesos");
+  const verPlanos = etapaAlcanzada(s.estado, "planos") || s.adjuntos.length > 0;
+  const verProcesos = etapaAlcanzada(s.estado, "procesos") || s.procesos.length > 0;
+  const catalogo = editaProcesos
     ? await db.proceso.findMany({
         where: { activo: true },
         orderBy: [{ orden: "asc" }, { nombre: "asc" }],
@@ -212,32 +217,36 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
             />
           </section>
 
-          <section className="tarjeta">
-            <h2 className="titulo-seccion">Procesos ({s.procesos.length})</h2>
-            <EditorProcesos
-              solicitudId={s.id}
-              asignados={s.procesos.map((p) => p.proceso)}
-              catalogo={catalogo}
-              puedeEditar={editaTecnico}
-              puedeCatalogo={puede(u.rol, "procesos.catalogo")}
-            />
-          </section>
+          {verPlanos && (
+            <section className="tarjeta">
+              <h2 className="titulo-seccion">Planos y documentos ({s.adjuntos.length})</h2>
+              <Adjuntos
+                solicitudId={s.id}
+                puedeEditar={editaPlanos}
+                extensiones={Object.keys(EXTENSIONES_ADJUNTO)}
+                adjuntos={s.adjuntos.map((a) => ({
+                  id: a.id,
+                  nombre: a.nombreOriginal,
+                  tipo: a.tipo,
+                  tamano: tamanoLegible(a.tamano),
+                  detalle: `${a.subidoPor.nombre}, ${fecha(a.creadoEl)}`,
+                }))}
+              />
+            </section>
+          )}
 
-          <section className="tarjeta">
-            <h2 className="titulo-seccion">Planos y documentos ({s.adjuntos.length})</h2>
-            <Adjuntos
-              solicitudId={s.id}
-              puedeEditar={editaTecnico}
-              extensiones={Object.keys(EXTENSIONES_ADJUNTO)}
-              adjuntos={s.adjuntos.map((a) => ({
-                id: a.id,
-                nombre: a.nombreOriginal,
-                tipo: a.tipo,
-                tamano: tamanoLegible(a.tamano),
-                detalle: `${a.subidoPor.nombre}, ${fecha(a.creadoEl)}`,
-              }))}
-            />
-          </section>
+          {verProcesos && (
+            <section className="tarjeta">
+              <h2 className="titulo-seccion">Procesos ({s.procesos.length})</h2>
+              <EditorProcesos
+                solicitudId={s.id}
+                asignados={s.procesos.map((p) => p.proceso)}
+                catalogo={catalogo}
+                puedeEditar={editaProcesos}
+                puedeCatalogo={puede(u.rol, "procesos.catalogo")}
+              />
+            </section>
+          )}
 
           <section className="tarjeta">
             <h2 className="titulo-seccion">Fotos ({s.fotos.length})</h2>
@@ -317,7 +326,7 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
 
               {s.cargadaEnProduccionPor && s.cargadaEnProduccionEl ? (
                 <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-                  <strong>Cargada en producción</strong> por {s.cargadaEnProduccionPor.nombre} el{" "}
+                  <strong>Código cargado en el sistema</strong> por {s.cargadaEnProduccionPor.nombre} el{" "}
                   {fechaHora(s.cargadaEnProduccionEl)}
                 </p>
               ) : (

@@ -18,7 +18,7 @@ export const viewport: Viewport = {
 
 // Aplica el tema guardado antes del primer pintado, para que no parpadee en claro al cargar.
 // Debe coincidir con la lógica de components/SelectorTema.tsx.
-const SCRIPT_TEMA = `(function(){try{var t=localStorage.getItem("nd_tema");var o=t==="oscuro"||(t!=="claro"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",o)}catch(e){}})()`;
+const SCRIPT_TEMA = `(function(){try{var t=localStorage.getItem("nd_tema");var o=t==="oscuro"||(t!=="claro"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",o);document.documentElement.classList.toggle("erp",t==="erp")}catch(e){}})()`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

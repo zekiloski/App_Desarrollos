@@ -8,6 +8,7 @@ export type Accion =
   | "comentar"
   | "tablero.ver"
   | "metricas.ver"
+  | "reportes.ver"
   | "ubicacion.editar"
   | "solicitud.espera"
   | "estado.retroceder"
@@ -34,6 +35,7 @@ export const PERMISOS_POR_DEFECTO: MatrizPermisos = {
   comentar: ["VENDEDOR", "RECEPCION", "OFICINA_TECNICA", "PRODUCCION", "ADMIN"],
   "tablero.ver": ["RECEPCION", "OFICINA_TECNICA", "PRODUCCION", "ADMIN"],
   "metricas.ver": ["ADMIN"],
+  "reportes.ver": ["OFICINA_TECNICA", "PRODUCCION", "ADMIN"],
   "ubicacion.editar": ["RECEPCION", "OFICINA_TECNICA", "PRODUCCION", "ADMIN"],
   "solicitud.espera": ["RECEPCION", "OFICINA_TECNICA", "PRODUCCION", "ADMIN"],
   "estado.retroceder": ["OFICINA_TECNICA", "ADMIN"],
@@ -80,6 +82,11 @@ export const GRUPOS_PERMISOS: { titulo: string; permisos: { accion: Accion; nomb
     permisos: [
       { accion: "tablero.ver", nombre: "Ver el tablero" },
       { accion: "metricas.ver", nombre: "Ver las métricas" },
+      {
+        accion: "reportes.ver",
+        nombre: "Ver reportes e imprimirlos o exportarlos",
+        detalle: "Incluye solo las solicitudes que el usuario puede ver.",
+      },
     ],
   },
   {

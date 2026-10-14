@@ -7,6 +7,7 @@ import { requerirUsuario } from "@/lib/auth";
 import { puede, type Accion } from "@/lib/permisos";
 import { filtroVisibilidad } from "@/lib/solicitudes";
 import { borrarArchivo } from "@/lib/archivos";
+import { etapaAlcanzada } from "@/lib/estados";
 import type { ResultadoAccion } from "./estados-acciones";
 
 const MAX_PROCESOS = 40;
@@ -96,6 +97,9 @@ export async function guardarDatosTecnicos(
 export async function guardarProcesos(solicitudId: number, procesoIds: number[]): Promise<ResultadoAccion> {
   const { s, error } = await solicitudEditable(solicitudId, "tecnico.editar");
   if (!s) return { ok: false, error };
+  if (!etapaAlcanzada(s.estado, "procesos")) {
+    return { ok: false, error: "Los procesos se cargan cuando la solicitud llega a la etapa de procesos." };
+  }
 
   if (!Array.isArray(procesoIds) || procesoIds.length > MAX_PROCESOS || procesoIds.some((i) => !Number.isInteger(i))) {
     return { ok: false, error: "La lista de procesos no es válida." };

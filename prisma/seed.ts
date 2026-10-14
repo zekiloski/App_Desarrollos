@@ -34,8 +34,19 @@ const PROCESOS = [
   "Armado",
 ];
 
+// En el servidor se define ADMIN_PASSWORD: se crea solo el admin, con esa contraseña, y nada de usuarios demo.
+// Sin ADMIN_PASSWORD (uso local) se crean todos los de prueba.
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD?.trim() || undefined;
+
 async function main() {
-  for (const u of USUARIOS) {
+  if (ADMIN_PASSWORD && ADMIN_PASSWORD.length < 8) {
+    throw new Error("ADMIN_PASSWORD tiene que tener al menos 8 caracteres.");
+  }
+  const usuarios = ADMIN_PASSWORD
+    ? [{ usuario: "admin", nombre: "Administrador", rol: "ADMIN" as Rol, password: ADMIN_PASSWORD }]
+    : USUARIOS;
+
+  for (const u of usuarios) {
     await db.usuario.upsert({
       where: { usuario: u.usuario },
       update: {},

@@ -72,6 +72,16 @@ export function indiceEstado(e: Estado) {
   return ORDEN.indexOf(e);
 }
 
+// Etapa desde la que se carga cada sección de la ficha. Antes de llegar no se muestra para cargar.
+export const ETAPA_SECCION = {
+  planos: "MEDICIONES_PLANO",
+  procesos: "DEFINICION_PROCESOS",
+} as const satisfies Record<string, Estado>;
+
+export function etapaAlcanzada(estado: Estado, seccion: keyof typeof ETAPA_SECCION) {
+  return indiceEstado(estado) >= indiceEstado(ETAPA_SECCION[seccion]);
+}
+
 function avancesDelFlujo(s: SolicitudFlujo): Estado[] {
   if (s.estado !== "INGRESADA") return AVANCES[s.estado];
   // Solo fotos: no hay pieza que recibir. Pieza física: primero tiene que llegar a planta.

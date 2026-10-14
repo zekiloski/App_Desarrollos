@@ -67,12 +67,16 @@ export async function generarExcel(piezas: PiezaExportable[]) {
 }
 
 // Listado general: una hoja con encabezados fijos, filtro automático y fechas como fechas de Excel.
-export async function generarExcelListado(columnas: string[], filas: (string | number | Date | null)[][]) {
+export async function generarExcelListado(
+  columnas: string[],
+  filas: (string | number | Date | null)[][],
+  nombreHoja = "Solicitudes",
+) {
   const libro = new ExcelJS.Workbook();
   libro.creator = "Nuevos Desarrollos";
   libro.created = new Date();
 
-  const hoja = libro.addWorksheet("Solicitudes");
+  const hoja = libro.addWorksheet(nombreHoja);
   hoja.addRow(columnas);
   for (const f of filas) hoja.addRow(f);
 
