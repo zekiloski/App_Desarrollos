@@ -7,6 +7,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// Todas las pantallas dependen de la sesión y de la base: se generan en cada visita, nunca al compilar.
+// Así la compilación no necesita conectarse a la base de datos.
+export const dynamic = "force-dynamic";
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,

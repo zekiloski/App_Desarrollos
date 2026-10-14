@@ -33,8 +33,10 @@ export async function cerrarSesionActual() {
 // Se consulta la base en cada request para que un usuario desactivado pierda el acceso al instante.
 export const usuarioActual = cache(async (): Promise<UsuarioSesion | null> => {
   // Toda verificación de permisos pasa primero por acá: se aprovecha para dejar cargados los vigentes.
+  // Leer la cookie primero marca la página como dinámica antes de tocar la base.
+  const token = (await cookies()).get(COOKIE_SESION)?.value;
   await cargarPermisos();
-  const uid = await leerToken((await cookies()).get(COOKIE_SESION)?.value);
+  const uid = await leerToken(token);
   if (!uid) return null;
   const u = await db.usuario.findUnique({
     where: { id: uid },
