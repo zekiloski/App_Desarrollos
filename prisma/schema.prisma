@@ -1,5 +1,8 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" es la PC donde se compila. Los demás cubren los Linux de los hostings (Hostinger compila y
+  // ejecuta en máquinas que pueden ser distintas), para que el motor de Prisma esté siempre disponible.
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "rhel-openssl-1.0.x", "rhel-openssl-1.1.x", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
