@@ -29,7 +29,8 @@ por ejemplo `desarrollos.tudominio.com`).
 - **Origen:** el repositorio de GitHub `zekiloski/App_Desarrollos` (rama `main`), o subir un .zip del
   proyecto **sin** `node_modules`, `.next`, `storage` ni `.env`.
 - **Versión de Node.js:** 20 o 22.
-- **Comando de compilación:** `npm run build:produccion`
+- **Comando de compilación:** el que viene por defecto (`npm run build`). Necesita la base ya creada y
+  `DATABASE_URL` cargada: crea las tablas al compilar.
 - **Comando de inicio:** `npm start`
 
 ## 3. Variables de entorno
@@ -67,7 +68,7 @@ no se le cambia la contraseña.
 
 ## 4. Compilar y arrancar
 
-Al desplegar, `npm run build:produccion` hace todo en orden:
+Al desplegar, `npm run build` hace todo en orden:
 
 1. `prisma generate` — prepara el acceso a la base para el servidor de Hostinger.
 2. `prisma migrate deploy` — crea las tablas (o aplica las que falten en futuras versiones).
