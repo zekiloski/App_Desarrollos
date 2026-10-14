@@ -29,8 +29,8 @@ por ejemplo `desarrollos.tudominio.com`).
 - **Origen:** el repositorio de GitHub `zekiloski/App_Desarrollos` (rama `main`), o subir un .zip del
   proyecto **sin** `node_modules`, `.next`, `storage` ni `.env`.
 - **Versión de Node.js:** 20 o 22.
-- **Comando de compilación:** el que viene por defecto (`npm run build`). Necesita la base ya creada y
-  `DATABASE_URL` cargada: crea las tablas al compilar.
+- **Comando de compilación:** el que viene por defecto (`npm run build`). No necesita la base.
+- **Comando de inicio:** `npm start` (por defecto). Al arrancar crea las tablas y el usuario admin.
 - **Comando de inicio:** `npm start`
 
 ## 3. Variables de entorno
@@ -68,14 +68,16 @@ no se le cambia la contraseña.
 
 ## 4. Compilar y arrancar
 
-Al desplegar, `npm run build` hace todo en orden:
+Al desplegar, `npm run build` prepara el acceso a la base (`prisma generate`) y compila la app. No se
+conecta a la base: en Hostinger la compilación puede correr en otra máquina.
 
-1. `prisma generate` — prepara el acceso a la base para el servidor de Hostinger.
-2. `prisma migrate deploy` — crea las tablas (o aplica las que falten en futuras versiones).
-3. Datos iniciales — usuario `admin`, lista de procesos y configuración. No pisa datos existentes.
-4. `next build` — compila la app.
+Después `npm start`, ya en el servidor, hace en orden:
 
-Después arranca con `npm start`. Entrar a la URL con `admin` y la contraseña de `ADMIN_PASSWORD`, y desde
+1. `prisma migrate deploy` — crea las tablas (o aplica las que falten en futuras versiones).
+2. Datos iniciales — usuario `admin`, lista de procesos y configuración. No pisa datos existentes.
+3. `next start` — arranca la app.
+
+Si la base no responde, la app no arranca y el error queda en los registros de la aplicación. Entrar a la URL con `admin` y la contraseña de `ADMIN_PASSWORD`, y desde
 **Admin → Usuarios** crear los usuarios reales.
 
 Cada vez que se suba una versión nueva (push a GitHub o zip nuevo) se repite el mismo proceso, sin perder
