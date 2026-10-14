@@ -30,7 +30,8 @@ por ejemplo `desarrollos.tudominio.com`).
   proyecto **sin** `node_modules`, `.next`, `storage` ni `.env`.
 - **Versión de Node.js:** 20 o 22.
 - **Comando de compilación:** el que viene por defecto (`npm run build`). No necesita la base.
-- **Comando de inicio:** `npm start` (por defecto). Al arrancar crea las tablas y el usuario admin.
+- **Comando de inicio:** el que viene por defecto. Al arrancar, la app crea sola las tablas y el usuario
+  admin.
 - **Comando de inicio:** `npm start`
 
 ## 3. Variables de entorno
@@ -68,16 +69,16 @@ no se le cambia la contraseña.
 
 ## 4. Compilar y arrancar
 
-Al desplegar, `npm run build` prepara el acceso a la base (`prisma generate`) y compila la app. No se
-conecta a la base: en Hostinger la compilación puede correr en otra máquina.
+Al desplegar, `npm run build` prepara el acceso a la base, empaqueta las migraciones dentro de la app y
+compila. No se conecta a la base: en Hostinger la compilación puede correr en otra máquina.
 
-Después `npm start`, ya en el servidor, hace en orden:
+Cada vez que la app arranca (`src/instrumentation.ts`), ya en el servidor:
 
-1. `prisma migrate deploy` — crea las tablas (o aplica las que falten en futuras versiones).
-2. Datos iniciales — usuario `admin`, lista de procesos y configuración. No pisa datos existentes.
-3. `next start` — arranca la app.
+1. Aplica las migraciones que falten — crea las tablas la primera vez; en versiones futuras, los cambios.
+2. Carga los datos iniciales — usuario `admin`, lista de procesos y configuración. No pisa datos existentes.
 
-Si la base no responde, la app no arranca y el error queda en los registros de la aplicación. Entrar a la URL con `admin` y la contraseña de `ADMIN_PASSWORD`, y desde
+Funciona aunque el hosting arranque la app sin pasar por `npm start`. Si la base no responde, la app
+arranca igual y el error se ve en `/api/cron/diagnostico?clave=CRON_SECRET`. Entrar a la URL con `admin` y la contraseña de `ADMIN_PASSWORD`, y desde
 **Admin → Usuarios** crear los usuarios reales.
 
 Cada vez que se suba una versión nueva (push a GitHub o zip nuevo) se repite el mismo proceso, sin perder
