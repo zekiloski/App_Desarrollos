@@ -123,7 +123,8 @@ export function evaluarCambio(s: SolicitudFlujo, rol: Rol, destino: Estado): Eva
     }
     const requisitos: Requisito[] = [];
     if (destino === "RECIBIDA_EN_PLANTA") requisitos.push("ubicacion", "etiqueta");
-    if (destino === "EN_ANALISIS" && s.estado === "RECIBIDA_EN_PLANTA" && s.etiquetaQr === "PENDIENTE") {
+    // Toda pieza física llega a análisis con la etiqueta resuelta, haya pasado o no por la recepción.
+    if (destino === "EN_ANALISIS" && s.tipoIngreso !== "FOTOS" && s.etiquetaQr === "PENDIENTE") {
       requisitos.push("etiqueta");
     }
     if (destino === "RECHAZADA") requisitos.push("motivo");
