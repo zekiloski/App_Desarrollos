@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { crearSolicitud } from "@/server/solicitudes-acciones";
 import { subirFoto } from "@/lib/fotos-cliente";
@@ -11,25 +11,32 @@ type ClienteOpcion = { nombre: string; contacto: string | null; telefono: string
 type FotoPendiente = { clave: string; archivo: File; vista: string };
 
 const MAX_FOTOS = 12;
+const MAX_DOCUMENTOS = 10;
+const TAMANO_MAX_DOCUMENTO = 25 * 1024 * 1024;
+const EXTENSIONES_DOCUMENTO = ["pdf", "doc", "docx"];
 
 export function FormNuevaSolicitud({
   clientes,
   vendedores,
   esVendedor,
   conMaterial,
+  conDocumentos,
   yo,
 }: {
   conMaterial: boolean;
+  conDocumentos: boolean;
   clientes: ClienteOpcion[];
   vendedores: { id: number; nombre: string }[];
   esVendedor: boolean;
   yo: { id: number; nombre: string };
 }) {
   const router = useRouter();
-  const [tipoIngreso, setTipoIngreso] = useState("");
+  // Por ahora toda solicitud nueva entra con fotos y pieza.
+  const tipoIngreso = "AMBAS";
   const [urgencia, setUrgencia] = useState("NORMAL");
   const [cliente, setCliente] = useState({ nombre: "", contacto: "", telefono: "", localidad: "" });
   const [fotos, setFotos] = useState<FotoPendiente[]>([]);
+  const [documentos, setDocumentos] = useState<{ clave: string; archivo: File }[]>([]);
   const [campos, setCampos] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [progreso, setProgreso] = useState("");
@@ -69,13 +76,27 @@ export function FormNuevaSolicitud({
     setFotos(fotos.filter((x) => x.clave !== clave));
   }
 
+  function agregarDocumentos(e: ChangeEvent<HTMLInputElement>) {
+    const archivos = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    const extension = (n: string) => (n.includes(".") ? n.split(".").pop()!.toLowerCase() : "");
+    const validos = archivos.filter(
+      (a) => EXTENSIONES_DOCUMENTO.includes(extension(a.name)) && a.size > 0 && a.size <= TAMANO_MAX_DOCUMENTO,
+    );
+    setError(validos.length < archivos.length ? "Algunos archivos no son PDF o Word, o superan los 25 MB." : "");
+    const nuevos = validos
+      .slice(0, MAX_DOCUMENTOS - documentos.length)
+      .map((archivo) => ({ clave: `d${++contador.current}`, archivo }));
+    setDocumentos([...documentos, ...nuevos]);
+  }
+
   async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (enviando) return;
     setError("");
     setCampos({});
 
-    if ((tipoIngreso === "FOTOS" || tipoIngreso === "AMBAS") && fotos.length === 0) {
+    if (fotos.length === 0) {
       setError("Agregá al menos una foto de la pieza.");
       return;
     }
@@ -99,7 +120,20 @@ export function FormNuevaSolicitud({
         fallidas++;
       }
     }
-    router.push(`/solicitudes/${r.id}${fallidas ? `?fotosFallidas=${fallidas}` : ""}`);
+    let documentosFallidos = 0;
+    for (let i = 0; i < documentos.length; i++) {
+      setProgreso(`Subiendo archivo ${i + 1} de ${documentos.length}…`);
+      const fd = new FormData();
+      fd.append("archivo", documentos[i].archivo);
+      const ok = await fetch(`/api/solicitudes/${r.id}/adjuntos`, { method: "POST", body: fd })
+        .then((x) => x.ok)
+        .catch(() => false);
+      if (!ok) documentosFallidos++;
+    }
+    const aviso = new URLSearchParams();
+    if (fallidas) aviso.set("fotosFallidas", String(fallidas));
+    if (documentosFallidos) aviso.set("documentosFallidos", String(documentosFallidos));
+    router.push(`/solicitudes/${r.id}${aviso.size ? `?${aviso}` : ""}`);
   }
 
   const claseCampo = (k: string) => `campo ${campos[k] ? "campo-error" : ""}`;
@@ -202,22 +236,14 @@ export function FormNuevaSolicitud({
           <span className="etiqueta">¿Cómo ingresó? *</span>
           <input type="hidden" name="tipoIngreso" value={tipoIngreso} />
           <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Tipo de ingreso">
-            {Object.entries(TIPOS_INGRESO).map(([clave, nombre]) => (
-              <button
-                key={clave}
-                type="button"
-                role="radio"
-                aria-checked={tipoIngreso === clave}
-                onClick={() => setTipoIngreso(clave)}
-                className={`min-h-14 cursor-pointer rounded-xl border-2 px-2 text-sm font-semibold ${
-                  tipoIngreso === clave
-                    ? "border-blue-700 bg-blue-50 text-blue-800"
-                    : "border-slate-300 bg-superficie text-slate-700"
-                }`}
-              >
-                {nombre}
-              </button>
-            ))}
+            <button
+              type="button"
+              role="radio"
+              aria-checked
+              className="min-h-14 rounded-xl border-2 border-blue-700 bg-blue-50 px-2 text-sm font-semibold text-blue-800"
+            >
+              {TIPOS_INGRESO[tipoIngreso]}
+            </button>
           </div>
           {errorDe("tipoIngreso")}
         </div>
@@ -341,6 +367,48 @@ export function FormNuevaSolicitud({
         <BotonesFoto onArchivos={agregarFotos} deshabilitado={enviando || fotos.length >= MAX_FOTOS} />
         <p className="text-sm text-slate-500">Se achican automáticamente antes de subirlas.</p>
       </section>
+
+      {conDocumentos && (
+        <section className="tarjeta space-y-3">
+          <div>
+            <h2 className="titulo-seccion mb-1!">Archivos ({documentos.length}/{MAX_DOCUMENTOS})</h2>
+            <p className="text-sm text-slate-500">Opcional: PDF o Word. También se pueden agregar después desde la ficha.</p>
+          </div>
+          {documentos.length > 0 && (
+            <ul className="divide-y divide-slate-200">
+              {documentos.map((d) => (
+                <li key={d.clave} className="flex items-center gap-3 py-2">
+                  <span className="min-w-0 flex-1 text-sm font-semibold break-all">{d.archivo.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => setDocumentos(documentos.filter((x) => x.clave !== d.clave))}
+                    disabled={enviando}
+                    aria-label={`Quitar ${d.archivo.name}`}
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-300 text-lg font-bold text-red-600 hover:bg-red-50"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <label
+            className={`btn btn-secundario w-full sm:w-auto ${
+              enviando || documentos.length >= MAX_DOCUMENTOS ? "pointer-events-none opacity-50" : ""
+            }`}
+          >
+            Subir archivo
+            <input
+              type="file"
+              multiple
+              accept={EXTENSIONES_DOCUMENTO.map((x) => `.${x}`).join(",")}
+              className="sr-only"
+              onChange={agregarDocumentos}
+              disabled={enviando || documentos.length >= MAX_DOCUMENTOS}
+            />
+          </label>
+        </section>
+      )}
 
       {error && (
         <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">

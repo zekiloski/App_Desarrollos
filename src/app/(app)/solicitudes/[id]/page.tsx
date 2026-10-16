@@ -29,7 +29,7 @@ import { BotonEliminar } from "./BotonEliminar";
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ fotosFallidas?: string }>;
+  searchParams: Promise<{ fotosFallidas?: string; documentosFallidos?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -81,7 +81,9 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
   });
   if (!s) notFound();
 
-  const fotosFallidas = Number((await searchParams).fotosFallidas) || 0;
+  const aviso = await searchParams;
+  const fotosFallidas = Number(aviso.fotosFallidas) || 0;
+  const documentosFallidos = Number(aviso.documentosFallidos) || 0;
   const esFisica = s.tipoIngreso !== "FOTOS";
   const editaUbicacion = esFisica && puede(u.rol, "ubicacion.editar");
 
@@ -104,7 +106,9 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
   // Planos y procesos se cargan al llegar a su etapa. Si volvió atrás con datos ya cargados, se ven sin editar.
   const editaPlanos = editaTecnico && etapaAlcanzada(s.estado, "planos");
   const editaProcesos = editaTecnico && etapaAlcanzada(s.estado, "procesos");
-  const verPlanos = etapaAlcanzada(s.estado, "planos") || s.adjuntos.length > 0;
+  // Documentos (PDF, Word…) se pueden sumar en cualquier etapa; los planos, desde su etapa.
+  const agregaAdjuntos = editaPlanos || (abierta && puede(u.rol, "fotos.agregar"));
+  const verPlanos = etapaAlcanzada(s.estado, "planos") || s.adjuntos.length > 0 || agregaAdjuntos;
   const verProcesos = etapaAlcanzada(s.estado, "procesos") || s.procesos.length > 0;
   const catalogo = editaProcesos
     ? await db.proceso.findMany({
@@ -143,6 +147,13 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
         <p role="alert" className="rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
           La solicitud se guardó, pero {fotosFallidas === 1 ? "1 foto no se pudo subir" : `${fotosFallidas} fotos no se pudieron subir`}.
           Podés volver a agregarlas desde la sección Fotos.
+        </p>
+      )}
+      {documentosFallidos > 0 && (
+        <p role="alert" className="rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+          La solicitud se guardó, pero{" "}
+          {documentosFallidos === 1 ? "1 archivo no se pudo subir" : `${documentosFallidos} archivos no se pudieron subir`}.
+          Podés volver a agregarlos desde la sección Planos y documentos.
         </p>
       )}
 
@@ -222,10 +233,11 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
               <h2 className="titulo-seccion">Planos y documentos ({s.adjuntos.length})</h2>
               <Adjuntos
                 solicitudId={s.id}
-                puedeEditar={editaPlanos}
+                puedeEditar={agregaAdjuntos}
                 extensiones={Object.keys(EXTENSIONES_ADJUNTO)}
                 adjuntos={s.adjuntos.map((a) => ({
                   id: a.id,
+                  puedeBorrar: editaTecnico || (agregaAdjuntos && a.subidoPorId === u.id),
                   nombre: a.nombreOriginal,
                   tipo: a.tipo,
                   tamano: tamanoLegible(a.tamano),

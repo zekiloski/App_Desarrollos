@@ -31,6 +31,7 @@ export default async function PaginaNuevaSolicitud() {
         vendedores={vendedores}
         esVendedor={u.rol === "VENDEDOR"}
         conMaterial={puede(u.rol, "material.editar") || puede(u.rol, "tecnico.editar")}
+        conDocumentos={puede(u.rol, "fotos.agregar")}
         yo={{ id: u.id, nombre: u.nombre }}
       />
     </div>

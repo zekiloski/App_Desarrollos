@@ -12,7 +12,10 @@ const MAX_ADJUNTOS_POR_SOLICITUD = 40;
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const u = await usuarioActual();
   if (!u) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-  if (!puede(u.rol, "tecnico.editar")) {
+  const tecnico = puede(u.rol, "tecnico.editar");
+  // Quien carga fotos también puede sumar documentos (PDF, Word…) en cualquier etapa.
+  const documentos = puede(u.rol, "fotos.agregar");
+  if (!tecnico && !documentos) {
     return NextResponse.json({ error: "Tu rol no puede adjuntar archivos." }, { status: 403 });
   }
 
@@ -27,7 +30,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (s.estado === "CERRADA") {
     return NextResponse.json({ error: "La solicitud está cerrada: ya no se puede modificar." }, { status: 400 });
   }
-  if (!etapaAlcanzada(s.estado, "planos")) {
+  if (!documentos && !etapaAlcanzada(s.estado, "planos")) {
     return NextResponse.json(
       { error: "Los planos se adjuntan cuando la solicitud llega a la etapa de planimetría." },
       { status: 400 },

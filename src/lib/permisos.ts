@@ -63,7 +63,11 @@ export const GRUPOS_PERMISOS: { titulo: string; permisos: { accion: Accion; nomb
         nombre: "Ver las solicitudes de todos",
         detalle: "Sin este permiso ve solo las que cargó o las que trajo como vendedor.",
       },
-      { accion: "fotos.agregar", nombre: "Agregar fotos a una solicitud" },
+      {
+        accion: "fotos.agregar",
+        nombre: "Agregar fotos y documentos a una solicitud",
+        detalle: "Documentos como PDF o Word, en cualquier etapa.",
+      },
       {
         accion: "material.editar",
         nombre: "Cargar material, espesor y dimensiones",

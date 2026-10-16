@@ -10,6 +10,7 @@ export type AdjuntoVista = {
   tipo: "PLANO" | "IMAGEN" | "DOCUMENTO";
   tamano: string;
   detalle: string;
+  puedeBorrar: boolean;
 };
 
 const TIPO = { PLANO: "Plano", IMAGEN: "Imagen", DOCUMENTO: "Documento" };
@@ -91,7 +92,7 @@ export function Adjuntos({
                   </span>
                 </div>
               </div>
-              {puedeEditar && (
+              {a.puedeBorrar && (
                 <button
                   type="button"
                   onClick={() => eliminar(a)}

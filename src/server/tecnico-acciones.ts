@@ -121,9 +121,15 @@ export async function guardarProcesos(solicitudId: number, procesoIds: number[])
 }
 
 export async function eliminarAdjunto(adjuntoId: number): Promise<ResultadoAccion> {
-  const a = await db.adjunto.findUnique({ where: { id: adjuntoId }, select: { id: true, ruta: true, solicitudId: true } });
+  const a = await db.adjunto.findUnique({
+    where: { id: adjuntoId },
+    select: { id: true, ruta: true, solicitudId: true, subidoPorId: true },
+  });
   if (!a) return { ok: false, error: "El archivo ya no existe." };
-  const { s, error } = await solicitudEditable(a.solicitudId, "tecnico.editar");
+  // Técnica borra cualquiera; los demás, solo los que subieron ellos.
+  const u = await requerirUsuario();
+  const accion = !puede(u.rol, "tecnico.editar") && a.subidoPorId === u.id ? "fotos.agregar" : "tecnico.editar";
+  const { s, error } = await solicitudEditable(a.solicitudId, accion);
   if (!s) return { ok: false, error };
 
   await db.adjunto.delete({ where: { id: a.id } });
