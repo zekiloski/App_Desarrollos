@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "r
 import { useRouter } from "next/navigation";
 import { crearSolicitud } from "@/server/solicitudes-acciones";
 import { subirFoto } from "@/lib/fotos-cliente";
-import { TIPOS_INGRESO, URGENCIAS } from "@/lib/etiquetas";
+import { URGENCIAS } from "@/lib/etiquetas";
 import { BotonesFoto } from "@/components/BotonesFoto";
 
 type ClienteOpcion = { nombre: string; contacto: string | null; telefono: string | null; localidad: string | null };
@@ -232,21 +232,7 @@ export function FormNuevaSolicitud({
 
       <section className="tarjeta space-y-4">
         <h2 className="titulo-seccion">Pieza</h2>
-        <div>
-          <span className="etiqueta">¿Cómo ingresó? *</span>
-          <input type="hidden" name="tipoIngreso" value={tipoIngreso} />
-          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Tipo de ingreso">
-            <button
-              type="button"
-              role="radio"
-              aria-checked
-              className="min-h-14 rounded-xl border-2 border-blue-700 bg-blue-50 px-2 text-sm font-semibold text-blue-800"
-            >
-              {TIPOS_INGRESO[tipoIngreso]}
-            </button>
-          </div>
-          {errorDe("tipoIngreso")}
-        </div>
+        <input type="hidden" name="tipoIngreso" value={tipoIngreso} />
         <div>
           <label htmlFor="descripcion" className="etiqueta">
             Descripción *
