@@ -44,7 +44,8 @@ export default async function PaginaEtiqueta({ params }: { params: Promise<{ id:
   // que muestra en el celular los planos, la descripción y la fecha de alta del código.
   const base = await urlBase();
   const contenido = s.codigoPieza
-    ? `${base}/p/${encodeURIComponent(s.codigoPieza)}`
+    ? // La clave (?k=) permite abrirlo sin iniciar sesión; sin ella, el código solo no alcanza.
+      `${base}/p/${encodeURIComponent(s.codigoPieza)}?k=${encodeURIComponent(s.tokenQr)}`
     : `${base}/q/${s.tokenQr}`;
   const qr = await QRCode.toString(contenido, { type: "svg", margin: 0, errorCorrectionLevel: "M" });
   const esLocal = /\/\/(localhost|127\.)/.test(contenido);
@@ -76,9 +77,10 @@ export default async function PaginaEtiqueta({ params }: { params: Promise<{ id:
             <>
               <div className="font-mono text-xl font-bold break-all">{s.codigoPieza}</div>
               <p className="text-sm text-slate-600">
-                Es el código de pieza cargado a mano. Al escanear el QR con el celular se abre la ficha de la pieza
-                con este código, los planos, la descripción y la fecha de alta del código. Si lo editás, reimprimí la
-                etiqueta.
+                Es el código de pieza cargado a mano. Al escanear el QR con cualquier celular, sin iniciar sesión,
+                se abre la ficha de la pieza con este código, los planos, la descripción y la fecha de alta del
+                código. Si lo editás, la etiqueta impresa sigue funcionando, pero conviene reimprimirla para que el
+                código escrito coincida.
               </p>
               {editaCodigo && <CorregirCodigo solicitudId={s.id} codigo={s.codigoPieza} texto="Editar código del QR" />}
             </>

@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requerirUsuario } from "@/lib/auth";
+import { usuarioActual } from "@/lib/auth";
 import { puedeVerSolicitud } from "@/lib/solicitudes";
 
-// Destino del código QR de la etiqueta. Si no hay sesión, el middleware manda al login y vuelve acá.
+// Destino del QR de la etiqueta de ingreso. Con el código de pieza ya cargado muestra la ficha pública de
+// la pieza (sin iniciar sesión); antes de eso lleva a la ficha de la solicitud, que sí pide sesión.
 export default async function PaginaQr({ params }: { params: Promise<{ token: string }> }) {
-  const u = await requerirUsuario();
   const { token } = await params;
 
   const s = await db.solicitud.findUnique({
@@ -14,12 +14,14 @@ export default async function PaginaQr({ params }: { params: Promise<{ token: st
     select: { id: true, numero: true, codigoPieza: true },
   });
   if (!s) notFound();
-  // Etiquetas impresas antes de cargar el código: también llevan a la ficha de la pieza.
-  if (s.codigoPieza) redirect(`/p/${encodeURIComponent(s.codigoPieza)}`);
+  if (s.codigoPieza) redirect(`/p/${encodeURIComponent(s.codigoPieza)}?k=${encodeURIComponent(token)}`);
+
+  const u = await usuarioActual();
+  if (!u) redirect(`/login?volver=${encodeURIComponent(`/q/${token}`)}`);
   if (await puedeVerSolicitud(u, s.id)) redirect(`/solicitudes/${s.id}`);
 
   return (
-    <div className="tarjeta mx-auto max-w-md text-center">
+    <div className="tarjeta text-center">
       <h1 className="text-xl font-bold">Pieza {s.numero}</h1>
       <p className="mt-2 text-slate-600">
         Esta pieza pertenece a una solicitud que no es tuya, por eso no podés ver su ficha. Si la encontraste

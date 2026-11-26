@@ -16,5 +16,6 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|logo.png|login|api/cron/).*)"],
+  // p/, q/ y api/pieza/: lo que abre el QR de una etiqueta. Cada página decide si pide sesión.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|logo.png|login|api/cron/|api/pieza/|p/|q/).*)"],
 };
