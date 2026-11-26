@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { requerirUsuario } from "@/lib/auth";
+import { requerirUsuario, veRecorrido } from "@/lib/auth";
 import { puede } from "@/lib/permisos";
 import { filtroVisibilidad } from "@/lib/solicitudes";
 import { diasAlerta } from "@/lib/config";
@@ -27,6 +27,7 @@ export default async function PaginaSolicitudes({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const u = await requerirUsuario();
+  const verRecorrido = veRecorrido(u);
   const f = leerFiltros(await searchParams);
   const veTodas = puede(u.rol, "solicitud.verTodas");
   const dias = await diasAlerta();
@@ -232,7 +233,9 @@ export default async function PaginaSolicitudes({
                     </div>
                   </div>
                  </div>
-                 <Progreso estado={s.estado} tipoIngreso={s.tipoIngreso} enEspera={s.enEspera} aprobada={s.aprobada} />
+                 {verRecorrido && (
+                   <Progreso estado={s.estado} tipoIngreso={s.tipoIngreso} enEspera={s.enEspera} aprobada={s.aprobada} />
+                 )}
                 </Link>
               </li>
             );

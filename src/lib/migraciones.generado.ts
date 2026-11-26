@@ -9,5 +9,10 @@ export const MIGRACIONES: { nombre: string; checksum: string; sql: string }[] = 
     "nombre": "20261007120000_etiqueta_qr",
     "checksum": "bc438690f62a0148f8db66ec717d09aaf8b1fdedb610e8e4a5b01ab2d2374de1",
     "sql": "-- AlterTable\nALTER TABLE `Solicitud` ADD COLUMN `etiquetaQr` ENUM('PENDIENTE', 'IMPRESA', 'NO_REQUIERE') NOT NULL DEFAULT 'PENDIENTE';\n"
+  },
+  {
+    "nombre": "20261126000000_ver_recorrido",
+    "checksum": "cda9e9a1173c8cc843d3791ce81c02e17052a07f241772eaf387a1f11f5497e1",
+    "sql": "-- AlterTable\nALTER TABLE `Usuario` ADD COLUMN `verRecorrido` BOOLEAN NOT NULL DEFAULT false;\n\n-- Habilitados de entrada: Oficina Técnica, José Melián y Pablo Del Boca. El administrador lo cambia por usuario.\nUPDATE `Usuario` SET `verRecorrido` = true\nWHERE `rol` IN ('ADMIN', 'OFICINA_TECNICA')\n   OR `nombre` LIKE '%Jose%Melian%'\n   OR `nombre` LIKE '%Pablo%Del%Boca%'\n   OR `nombre` LIKE '%Pablo%Delboca%';\n"
   }
 ];

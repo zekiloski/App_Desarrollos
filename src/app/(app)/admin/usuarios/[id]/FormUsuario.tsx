@@ -13,6 +13,7 @@ type UsuarioEditable = {
   rol: Rol;
   telefono: string | null;
   activo: boolean;
+  verRecorrido: boolean;
 };
 
 export function FormUsuario({ usuario }: { usuario: UsuarioEditable | null }) {
@@ -112,6 +113,13 @@ export function FormUsuario({ usuario }: { usuario: UsuarioEditable | null }) {
         <input type="checkbox" name="activo" defaultChecked={usuario?.activo ?? true} className="h-6 w-6" />
         <span className="font-semibold">Usuario activo</span>
         <span className="text-sm text-slate-500">(si se desmarca, no puede ingresar)</span>
+      </label>
+      <label className="flex min-h-12 cursor-pointer items-center gap-3">
+        <input type="checkbox" name="verRecorrido" defaultChecked={usuario?.verRecorrido ?? false} className="h-6 w-6" />
+        <span className="font-semibold">Ve el recorrido de las piezas</span>
+        <span className="text-sm text-slate-500">
+          (avance por etapas, línea de tiempo y ubicaciones anteriores; los administradores lo ven siempre)
+        </span>
       </label>
 
       {estado.error && (

@@ -23,6 +23,7 @@ const esquema = z.object({
   telefono: z.string().trim().max(40).optional(),
   password: z.string().min(8, "Mínimo 8 caracteres").max(100).optional(),
   activo: z.boolean(),
+  verRecorrido: z.boolean(),
 });
 
 export async function guardarUsuario(
@@ -45,6 +46,7 @@ export async function guardarUsuario(
     telefono: txt("telefono"),
     password: txt("password"),
     activo: fd.get("activo") === "on",
+    verRecorrido: fd.get("verRecorrido") === "on",
   });
   if (!r.success) {
     const campos: Record<string, string> = {};
@@ -79,6 +81,7 @@ export async function guardarUsuario(
     rol: d.rol,
     telefono: d.telefono ?? null,
     activo: d.activo,
+    verRecorrido: d.verRecorrido,
   };
   const passwordHash = d.password ? await bcrypt.hash(d.password, 10) : undefined;
 

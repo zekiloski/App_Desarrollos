@@ -40,7 +40,10 @@ export default async function PaginaUsuarios() {
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">
                 <span className="chip bg-slate-100 text-slate-700">{ROLES[x.rol]}</span>
-                {!x.activo && <span className="chip bg-red-100 text-red-700">Inactivo</span>}
+                {(x.rol === "ADMIN" || x.verRecorrido) && (
+                  <span className="chip bg-emerald-100 text-emerald-800">Ve el recorrido</span>
+                )}
+                {!x.activo &&<span className="chip bg-red-100 text-red-700">Inactivo</span>}
               </div>
             </Link>
           </li>

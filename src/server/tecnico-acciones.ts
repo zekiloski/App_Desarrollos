@@ -141,10 +141,17 @@ export async function eliminarAdjunto(adjuntoId: number): Promise<ResultadoAccio
 
 // Corrección del código ya cargado. La primera carga se hace al pasar a "Código creado".
 export async function corregirCodigo(solicitudId: number, codigoNuevo: string): Promise<ResultadoAccion> {
-  const { u, s, error } = await solicitudEditable(solicitudId, "codigo.gestionar");
-  if (!s) return { ok: false, error };
-  if (s.estado !== "CODIGO_CREADO") {
-    return { ok: false, error: "El código solo se puede corregir mientras la solicitud está en “Código creado”." };
+  // A diferencia del resto de los datos, el código se puede corregir también con la solicitud cerrada:
+  // es el que lleva el QR de la etiqueta y puede hacer falta reimprimirla con el código bien escrito.
+  const u = await requerirUsuario();
+  if (!puede(u.rol, "codigo.gestionar")) return { ok: false, error: "Tu rol no puede modificar el código de pieza." };
+  const s = await db.solicitud.findFirst({
+    where: { AND: [{ id: solicitudId }, filtroVisibilidad(u)] },
+    select: { id: true, codigoPieza: true },
+  });
+  if (!s) return { ok: false, error: "Solicitud no encontrada." };
+  if (!s.codigoPieza) {
+    return { ok: false, error: "Todavía no se cargó el código de pieza: se carga en la etapa “Código creado”." };
   }
 
   const codigo = limpio(codigoNuevo, 100);
@@ -168,6 +175,7 @@ export async function corregirCodigo(solicitudId: number, codigoNuevo: string): 
   }
 
   revalidatePath(`/solicitudes/${s.id}`);
+  revalidatePath(`/solicitudes/${s.id}/etiqueta`);
   return { ok: true };
 }
 

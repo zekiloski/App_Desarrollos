@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { requerirUsuario } from "@/lib/auth";
+import { requerirUsuario, veRecorrido } from "@/lib/auth";
 import { puede } from "@/lib/permisos";
 import { filtroVisibilidad } from "@/lib/solicitudes";
 import {
@@ -100,6 +100,7 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
       ])
     : [[], []];
 
+  const verRecorrido = veRecorrido(u);
   const abierta = s.estado !== "CERRADA";
   const editaTecnico = abierta && puede(u.rol, "tecnico.editar");
   const gestionaCodigo = puede(u.rol, "codigo.gestionar");
@@ -168,9 +169,11 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
         <p className="text-sm text-slate-500">
           Ingresó el {fechaHora(s.fechaIngreso)} ({hace(s.fechaIngreso)}) · Último movimiento {hace(s.fechaUltimoMovimiento)}
         </p>
-        <div className="mt-4">
-          <Progreso estado={s.estado} tipoIngreso={s.tipoIngreso} enEspera={s.enEspera} aprobada={s.aprobada} />
-        </div>
+        {verRecorrido && (
+          <div className="mt-4">
+            <Progreso estado={s.estado} tipoIngreso={s.tipoIngreso} enEspera={s.enEspera} aprobada={s.aprobada} />
+          </div>
+        )}
         {s.enEspera && s.motivoEspera && (
           <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
             <strong>En espera:</strong> {s.motivoEspera}
@@ -332,8 +335,13 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
                   </div>
                 )}
               </div>
-              {gestionaCodigo && s.estado === "CODIGO_CREADO" && (
-                <CorregirCodigo solicitudId={s.id} codigo={s.codigoPieza} />
+              {gestionaCodigo && (
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <CorregirCodigo solicitudId={s.id} codigo={s.codigoPieza} />
+                  <Link href={`/solicitudes/${s.id}/etiqueta`} className="text-sm font-semibold text-blue-700">
+                    Etiqueta QR con este código
+                  </Link>
+                </div>
               )}
 
               {s.cargadaEnProduccionPor && s.cargadaEnProduccionEl ? (
@@ -400,7 +408,7 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
                   </p>
                 </>
               )}
-              {s.movimientosUbicacion.length > 1 && (
+              {verRecorrido && s.movimientosUbicacion.length > 1 && (
                 <details className="mt-3 text-sm">
                   <summary className="cursor-pointer font-semibold text-slate-600">Ubicaciones anteriores</summary>
                   <ul className="mt-2 space-y-2">
@@ -422,22 +430,24 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
             </section>
           )}
 
-          <section className="tarjeta">
-            <h2 className="titulo-seccion">Línea de tiempo</h2>
-            <ol className="space-y-4 border-l-2 border-slate-200 pl-4">
-              {s.movimientosEstado.map((m) => (
-                <li key={m.id} className="relative">
-                  <span className="absolute top-1.5 -left-[23px] h-3 w-3 rounded-full border-2 border-superficie bg-marca" />
-                  <div className="font-semibold">{tituloMovimiento(m)}</div>
-                  <div className="text-sm text-slate-500">
-                    {fechaHora(m.fecha)} · {m.usuario.nombre}
-                  </div>
-                  {m.motivo && <p className="mt-0.5 text-sm text-slate-700">{m.motivo}</p>}
-                </li>
-              ))}
-            </ol>
-            <p className="mt-4 text-xs text-slate-400">Creada el {fecha(s.creadoEl)}</p>
-          </section>
+          {verRecorrido && (
+            <section className="tarjeta">
+              <h2 className="titulo-seccion">Línea de tiempo</h2>
+              <ol className="space-y-4 border-l-2 border-slate-200 pl-4">
+                {s.movimientosEstado.map((m) => (
+                  <li key={m.id} className="relative">
+                    <span className="absolute top-1.5 -left-[23px] h-3 w-3 rounded-full border-2 border-superficie bg-marca" />
+                    <div className="font-semibold">{tituloMovimiento(m)}</div>
+                    <div className="text-sm text-slate-500">
+                      {fechaHora(m.fecha)} · {m.usuario.nombre}
+                    </div>
+                    {m.motivo && <p className="mt-0.5 text-sm text-slate-700">{m.motivo}</p>}
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-4 text-xs text-slate-400">Creada el {fecha(s.creadoEl)}</p>
+            </section>
+          )}
 
           {puede(u.rol, "solicitud.eliminar") && <BotonEliminar solicitudId={s.id} numero={s.numero} />}
         </div>

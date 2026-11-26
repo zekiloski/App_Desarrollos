@@ -83,6 +83,9 @@ model Usuario {
   rol          Rol
   telefono     String?  @db.VarChar(40)
   activo       Boolean  @default(true)
+  // Si ve la línea de avance, la línea de tiempo y el historial de ubicaciones de las piezas.
+  // El administrador lo ve siempre; para el resto lo activa el administrador usuario por usuario.
+  verRecorrido Boolean  @default(false)
   creadoEl     DateTime @default(now())
   actualizadoEl DateTime @updatedAt
 

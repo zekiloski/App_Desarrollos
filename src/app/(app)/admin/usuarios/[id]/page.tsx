@@ -18,7 +18,7 @@ export default async function PaginaUsuario({ params }: { params: Promise<{ id: 
     if (!Number.isInteger(n)) notFound();
     usuario = await db.usuario.findUnique({
       where: { id: n },
-      select: { id: true, nombre: true, usuario: true, email: true, rol: true, telefono: true, activo: true },
+      select: { id: true, nombre: true, usuario: true, email: true, rol: true, telefono: true, activo: true, verRecorrido: true },
     });
     if (!usuario) notFound();
   }

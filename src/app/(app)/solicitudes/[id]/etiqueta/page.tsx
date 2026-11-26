@@ -9,6 +9,7 @@ import { filtroVisibilidad } from "@/lib/solicitudes";
 import { fecha } from "@/lib/formato";
 import { urlBase } from "@/lib/url";
 import { BotonImprimir } from "./BotonImprimir";
+import { CorregirCodigo } from "../CorregirCodigo";
 
 export const metadata: Metadata = { title: "Etiqueta" };
 
@@ -24,6 +25,7 @@ export default async function PaginaEtiqueta({ params }: { params: Promise<{ id:
       numero: true,
       tokenQr: true,
       etiquetaQr: true,
+      codigoPieza: true,
       descripcion: true,
       fechaIngreso: true,
       cliente: { select: { nombre: true } },
@@ -37,9 +39,13 @@ export default async function PaginaEtiqueta({ params }: { params: Promise<{ id:
     await db.solicitud.update({ where: { id: s.id }, data: { etiquetaQr: "IMPRESA" } });
   }
 
+  // Mientras la pieza circula, el QR lleva un código automático (el enlace a la ficha). Cuando Oficina
+  // Técnica carga a mano el código de pieza en la última etapa, el QR pasa a contener ese código.
   const url = `${await urlBase()}/q/${s.tokenQr}`;
-  const qr = await QRCode.toString(url, { type: "svg", margin: 0, errorCorrectionLevel: "M" });
-  const esLocal = /\/\/(localhost|127\.)/.test(url);
+  const contenido = s.codigoPieza ?? url;
+  const qr = await QRCode.toString(contenido, { type: "svg", margin: 0, errorCorrectionLevel: "M" });
+  const esLocal = !s.codigoPieza && /\/\/(localhost|127\.)/.test(url);
+  const editaCodigo = !!s.codigoPieza && puede(u.rol, "codigo.gestionar");
 
   return (
     <div className="space-y-4">
@@ -60,6 +66,26 @@ export default async function PaginaEtiqueta({ params }: { params: Promise<{ id:
             configurá APP_URL en el archivo .env con la dirección real de la app.
           </p>
         )}
+
+        <div className="tarjeta space-y-2">
+          <div className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Código del QR</div>
+          {s.codigoPieza ? (
+            <>
+              <div className="font-mono text-xl font-bold break-all">{s.codigoPieza}</div>
+              <p className="text-sm text-slate-600">Es el código de pieza cargado a mano. Al escanear el QR se lee este código.</p>
+              {editaCodigo && <CorregirCodigo solicitudId={s.id} codigo={s.codigoPieza} texto="Editar código del QR" />}
+            </>
+          ) : (
+            <>
+              <div className="font-mono text-xl font-bold">{s.numero}</div>
+              <p className="text-sm text-slate-600">
+                Código automático de ingreso: el QR abre la ficha de la solicitud. Cuando se cargue el código de
+                pieza en la etapa “Código creado”, el QR pasa a tener ese código y hay que reimprimir la etiqueta.
+              </p>
+            </>
+          )}
+        </div>
+
         <BotonImprimir />
       </div>
 
@@ -74,10 +100,18 @@ export default async function PaginaEtiqueta({ params }: { params: Promise<{ id:
           <div className="flex min-w-0 flex-1 flex-col justify-between">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Oncativo S.A." className="h-[8mm] w-auto self-start" />
-            <div>
-              <div className="text-[2.6mm] font-semibold tracking-wide uppercase">Nuevo desarrollo</div>
-              <div className="font-mono text-[6mm] leading-none font-black">{s.numero}</div>
-            </div>
+            {s.codigoPieza ? (
+              <div>
+                <div className="text-[2.6mm] font-semibold tracking-wide uppercase">Código de pieza</div>
+                <div className="font-mono text-[5mm] leading-none font-black break-all">{s.codigoPieza}</div>
+                <div className="mt-[0.5mm] font-mono text-[2.8mm]">{s.numero}</div>
+              </div>
+            ) : (
+              <div>
+                <div className="text-[2.6mm] font-semibold tracking-wide uppercase">Nuevo desarrollo</div>
+                <div className="font-mono text-[6mm] leading-none font-black">{s.numero}</div>
+              </div>
+            )}
             <div className="text-[3mm] leading-tight">
               <div className="truncate font-bold">{s.cliente.nombre}</div>
               <div className="line-clamp-2">{s.descripcion}</div>
@@ -89,7 +123,9 @@ export default async function PaginaEtiqueta({ params }: { params: Promise<{ id:
         </div>
       </div>
 
-      <p className="text-xs break-all text-slate-400 print:hidden">El QR abre: {url}</p>
+      <p className="text-xs break-all text-slate-400 print:hidden">
+        {s.codigoPieza ? "El QR contiene" : "El QR abre"}: {contenido}
+      </p>
     </div>
   );
 }

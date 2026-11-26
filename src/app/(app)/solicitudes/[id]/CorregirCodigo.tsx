@@ -4,7 +4,15 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { corregirCodigo } from "@/server/tecnico-acciones";
 
-export function CorregirCodigo({ solicitudId, codigo }: { solicitudId: number; codigo: string }) {
+export function CorregirCodigo({
+  solicitudId,
+  codigo,
+  texto = "Corregir código",
+}: {
+  solicitudId: number;
+  codigo: string;
+  texto?: string;
+}) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -26,13 +34,13 @@ export function CorregirCodigo({ solicitudId, codigo }: { solicitudId: number; c
   if (!editando) {
     return (
       <button type="button" className="text-sm font-semibold text-blue-700" onClick={() => setEditando(true)}>
-        Corregir código
+        {texto}
       </button>
     );
   }
 
   return (
-    <form onSubmit={enviar} className="space-y-2">
+    <form onSubmit={enviar} className="w-full space-y-2">
       <label htmlFor="corregir-codigo" className="sr-only">
         Código de pieza
       </label>

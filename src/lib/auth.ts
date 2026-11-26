@@ -13,6 +13,7 @@ export type UsuarioSesion = {
   usuario: string;
   email: string;
   rol: Rol;
+  verRecorrido: boolean;
 };
 
 export async function crearSesion(uid: number) {
@@ -40,11 +41,17 @@ export const usuarioActual = cache(async (): Promise<UsuarioSesion | null> => {
   if (!uid) return null;
   const u = await db.usuario.findUnique({
     where: { id: uid },
-    select: { id: true, nombre: true, usuario: true, email: true, rol: true, activo: true },
+    select: { id: true, nombre: true, usuario: true, email: true, rol: true, activo: true, verRecorrido: true },
   });
   if (!u || !u.activo) return null;
-  return { id: u.id, nombre: u.nombre, usuario: u.usuario, email: u.email, rol: u.rol };
+  return { id: u.id, nombre: u.nombre, usuario: u.usuario, email: u.email, rol: u.rol, verRecorrido: u.verRecorrido };
 });
+
+// Recorrido de la pieza (avance por etapas, línea de tiempo, ubicaciones anteriores): solo administradores
+// y los usuarios que el administrador habilitó.
+export function veRecorrido(u: UsuarioSesion) {
+  return u.rol === "ADMIN" || u.verRecorrido;
+}
 
 export async function requerirUsuario(): Promise<UsuarioSesion> {
   const u = await usuarioActual();
