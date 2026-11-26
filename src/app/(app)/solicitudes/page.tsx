@@ -216,7 +216,14 @@ export default async function PaginaSolicitudes({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className="font-mono text-sm font-bold text-blue-800">{s.numero}</span>
+                      {s.codigoPieza ? (
+                        <>
+                          <span className="font-mono text-sm font-bold text-blue-800">{s.codigoPieza}</span>
+                          <span className="font-mono text-xs text-slate-500">{s.numero}</span>
+                        </>
+                      ) : (
+                        <span className="font-mono text-sm font-bold text-blue-800">{s.numero}</span>
+                      )}
                       <span className={`chip ${colorEstado(s.estado)}`}>{nombreEstado(s.estado)}</span>
                       {s.enEspera && <span className="chip bg-amber-100 text-amber-800">En espera</span>}
                       {detenida && (

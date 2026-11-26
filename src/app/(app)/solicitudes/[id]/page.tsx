@@ -160,7 +160,8 @@ export default async function PaginaFicha({ params, searchParams }: Props) {
 
       <header className="tarjeta">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="font-mono text-2xl font-bold text-blue-800">{s.numero}</h1>
+          <h1 className="font-mono text-2xl font-bold text-blue-800">{s.codigoPieza ?? s.numero}</h1>
+          {s.codigoPieza && <span className="font-mono text-sm text-slate-500">{s.numero}</span>}
           <span className={`chip ${colorEstado(s.estado)}`}>{nombreEstado(s.estado)}</span>
           {s.enEspera && <span className="chip bg-amber-100 text-amber-800">En espera</span>}
           <span className={`chip ${COLOR_URGENCIA[s.urgencia]}`}>Urgencia {URGENCIAS[s.urgencia].toLowerCase()}</span>
