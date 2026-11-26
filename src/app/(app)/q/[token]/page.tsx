@@ -9,8 +9,13 @@ export default async function PaginaQr({ params }: { params: Promise<{ token: st
   const u = await requerirUsuario();
   const { token } = await params;
 
-  const s = await db.solicitud.findUnique({ where: { tokenQr: token }, select: { id: true, numero: true } });
+  const s = await db.solicitud.findUnique({
+    where: { tokenQr: token },
+    select: { id: true, numero: true, codigoPieza: true },
+  });
   if (!s) notFound();
+  // Etiquetas impresas antes de cargar el código: también llevan a la ficha de la pieza.
+  if (s.codigoPieza) redirect(`/p/${encodeURIComponent(s.codigoPieza)}`);
   if (await puedeVerSolicitud(u, s.id)) redirect(`/solicitudes/${s.id}`);
 
   return (

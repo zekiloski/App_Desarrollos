@@ -40,11 +40,14 @@ export default async function PaginaEtiqueta({ params }: { params: Promise<{ id:
   }
 
   // Mientras la pieza circula, el QR lleva un código automático (el enlace a la ficha). Cuando Oficina
-  // Técnica carga a mano el código de pieza en la última etapa, el QR pasa a contener ese código.
-  const url = `${await urlBase()}/q/${s.tokenQr}`;
-  const contenido = s.codigoPieza ?? url;
+  // Técnica carga a mano el código de pieza en la última etapa, el QR pasa a ser un enlace con ese código
+  // que muestra en el celular los planos, la descripción y la fecha de alta del código.
+  const base = await urlBase();
+  const contenido = s.codigoPieza
+    ? `${base}/p/${encodeURIComponent(s.codigoPieza)}`
+    : `${base}/q/${s.tokenQr}`;
   const qr = await QRCode.toString(contenido, { type: "svg", margin: 0, errorCorrectionLevel: "M" });
-  const esLocal = !s.codigoPieza && /\/\/(localhost|127\.)/.test(url);
+  const esLocal = /\/\/(localhost|127\.)/.test(contenido);
   const editaCodigo = !!s.codigoPieza && puede(u.rol, "codigo.gestionar");
 
   return (
@@ -72,7 +75,11 @@ export default async function PaginaEtiqueta({ params }: { params: Promise<{ id:
           {s.codigoPieza ? (
             <>
               <div className="font-mono text-xl font-bold break-all">{s.codigoPieza}</div>
-              <p className="text-sm text-slate-600">Es el código de pieza cargado a mano. Al escanear el QR se lee este código.</p>
+              <p className="text-sm text-slate-600">
+                Es el código de pieza cargado a mano. Al escanear el QR con el celular se abre la ficha de la pieza
+                con este código, los planos, la descripción y la fecha de alta del código. Si lo editás, reimprimí la
+                etiqueta.
+              </p>
               {editaCodigo && <CorregirCodigo solicitudId={s.id} codigo={s.codigoPieza} texto="Editar código del QR" />}
             </>
           ) : (
@@ -124,7 +131,7 @@ export default async function PaginaEtiqueta({ params }: { params: Promise<{ id:
       </div>
 
       <p className="text-xs break-all text-slate-400 print:hidden">
-        {s.codigoPieza ? "El QR contiene" : "El QR abre"}: {contenido}
+        El QR abre: {contenido}
       </p>
     </div>
   );
